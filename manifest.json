@@ -1,10 +1,13 @@
 {
   "name": "Controle Financeiro Familiar",
-  "short_name": "controle_financeiro",
-  "start_url": "/",
+  "short_name": "Finanças",
+  "start_url": "https://onrender.com",
+  "scope": "https://onrender.com",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "orientation": "portrait",
+  "id": "https://onrender.commanifest.json",
   "icons": [
     {
       "src": "icone.png",
