@@ -1,19 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR" id="html-root">
 <head>
-<!-- Link para o Manifesto -->
-<link rel="manifest" href="manifest.json">
-
-<!-- Script para ativar o Service Worker -->
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log("Service Worker Registrado!"));
-  }
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle Financeiro - Versão 21</title>
+    <title>Controle Financeiro - Versão 22</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -37,7 +27,7 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
 
-    <!-- 1. TELA DE LOGIN (Campos em branco) -->
+    <!-- 1. TELA DE LOGIN -->
     <div id="screen-login" class="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 p-4">
         <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-w-md w-full space-y-6">
             <div class="text-center space-y-2">
@@ -80,10 +70,14 @@
                 <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div class="flex items-center space-x-3">
                         <i class="fa-solid fa-wallet text-2xl"></i>
-                        <h1 class="text-xl font-bold">Controle Financeiro <span class="text-xs bg-indigo-800 px-2 py-0.5 rounded">v21</span></h1>
+                        <h1 class="text-xl font-bold">Controle Financeiro <span class="text-xs bg-indigo-800 px-2 py-0.5 rounded">v22</span></h1>
                     </div>
                     <div class="flex items-center flex-wrap gap-2 justify-end">
-                        <button onclick="abrirModalManual()" class="text-sm bg-indigo-700 dark:bg-indigo-800 hover:bg-indigo-800 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1" title="Manual Detalhado">
+                        <button onclick="baixarIcone512()" class="text-sm bg-indigo-700 dark:bg-indigo-800 hover:bg-indigo-800 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1" title="Baixar Ícone 512x512 PNG">
+                            <i class="fa-solid fa-download"></i>
+                            <span class="text-xs hidden sm:inline">Baixar Ícone</span>
+                        </button>
+                        <button onclick="abrirModalManual()" class="text-sm bg-indigo-700 dark:bg-indigo-800 hover:bg-indigo-800 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1" title="Manual Interativo">
                             <i class="fa-solid fa-book"></i>
                             <span class="text-xs hidden sm:inline">Manual</span>
                         </button>
@@ -118,7 +112,7 @@
                 <!-- Main Content Area -->
                 <main class="md:col-span-3 space-y-6">
 
-                    <!-- TAB 1: DASHBOARD & IA COM VOZ NATURAL -->
+                    <!-- TAB 1: DASHBOARD & IA -->
                     <div id="tab-dashboard" class="tab-content space-y-6">
                         <div class="flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 gap-3">
                             <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Dashboard Financeiro & Consultoria IA</h3>
@@ -156,15 +150,15 @@
                             </div>
                         </div>
 
-                        <!-- Chat Interativo com IA (Voz Natural & Orçamento Familiar) -->
+                        <!-- Chat Interativo com IA -->
                         <div class="bg-gradient-to-r from-indigo-900 to-indigo-700 dark:from-slate-800 dark:to-indigo-950 text-white p-6 rounded-xl shadow-sm space-y-4">
                             <div class="flex items-center space-x-3">
                                 <div class="bg-indigo-500 p-3 rounded-xl">
                                     <i class="fa-solid fa-microphone-lines text-xl"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-lg font-bold">Assistente IA Especialista (Voz Fluida & Orçamento Familiar)</h3>
-                                    <p class="text-xs text-indigo-200">Fale pelo microfone ou digite. A IA responde em áudio fluido e natural com dados exatos do seu mês.</p>
+                                    <h3 class="text-lg font-bold">Assistente IA Especialista (Voz Fluida & Análise de Lançamentos)</h3>
+                                    <p class="text-xs text-indigo-200">Fale pelo microfone ou digite. A IA analisa seus dados reais para responder sobre saldos, maiores gastos e contas pendentes.</p>
                                 </div>
                             </div>
                             <div id="chat-container" class="bg-indigo-950/60 dark:bg-slate-900/80 p-4 rounded-lg text-sm text-indigo-100 max-h-60 overflow-y-auto space-y-3 border border-indigo-800">
@@ -444,7 +438,7 @@
         <!-- RODAPÉ -->
         <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mt-10 py-4 px-6 text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
             <div>
-                <strong>Controle Financeiro</strong> &bull; Sistema de Gestão Multiusuário &bull; <span class="text-indigo-600 dark:text-indigo-400 font-bold">Versão 21</span>
+                <strong>Controle Financeiro</strong> &bull; Sistema de Gestão Multiusuário &bull; <span class="text-indigo-600 dark:text-indigo-400 font-bold">Versão 22</span>
             </div>
             <div id="footer-user-status" class="flex items-center space-x-2">
                 <i class="fa-solid fa-circle text-emerald-500 text-[8px]"></i>
@@ -507,35 +501,58 @@
         </div>
     </div>
 
-    <!-- MODAL MANUAL DETALHADO EXPANDIDO -->
+    <!-- MODAL MANUAL INTERATIVO (Versão 22) -->
     <div id="modal-manual" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-4xl w-full space-y-5 shadow-xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-xl font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-book-open text-indigo-600 mr-2"></i> Manual Completo do Sistema</h3>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-book-open text-indigo-600 mr-2"></i> Manual Interativo do Sistema</h3>
                 <button onclick="fecharModalManual()" class="text-slate-500 hover:text-slate-700 font-bold text-xl">&times;</button>
             </div>
             
-            <div class="space-y-6 text-sm text-slate-600 dark:text-slate-300">
-                <div class="bg-indigo-50 dark:bg-slate-900/60 p-4 rounded-xl border border-indigo-100 dark:border-slate-700 space-y-2">
-                    <h4 class="font-bold text-indigo-700 dark:text-indigo-400 flex items-center"><i class="fa-solid fa-sitemap mr-2"></i> 1. Visão Geral e Arquitetura</h4>
-                    <p class="text-xs">O sistema de Controle Financeiro foi projetado para gestão orçamentária pessoal e familiar multiusuário, oferecendo suporte completo a computadores e celulares com sincronização local e base compartilhada.</p>
-                </div>
+            <!-- Abas do Manual -->
+            <div class="flex flex-wrap gap-2 border-b dark:border-slate-700 pb-2">
+                <button onclick="switchManualTab('passo1')" id="btn-manual-passo1" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition-colors">1. Primeiros Passos</button>
+                <button onclick="switchManualTab('passo2')" id="btn-manual-passo2" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">2. Lançamentos & Meses</button>
+                <button onclick="switchManualTab('passo3')" id="btn-manual-passo3" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">3. Assistente de Voz IA</button>
+                <button onclick="switchManualTab('passo4')" id="btn-manual-passo4" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">4. Segurança & Ícone</button>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border space-y-1">
-                        <h5 class="font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-right-left text-indigo-500 mr-1"></i> 2. Gestão de Lançamentos e Meses</h5>
-                        <p class="text-xs">Cadastre receitas e despesas informando data, valor, status e descrição. Crie novos meses ou exclua meses vazios com facilidade na aba de lançamentos.</p>
-                    </div>
-                    <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border space-y-1">
-                        <h5 class="font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-shield-halved text-indigo-500 mr-1"></i> 3. Perfis e Concorrência</h5>
-                        <p class="text-xs">Gerencie perfis de acesso. O sistema bloqueia edições simultâneas (*locking*) no mesmo registro, garantindo integridade para múltiplos usuários.</p>
-                    </div>
-                </div>
+            <!-- Conteúdo das Abas -->
+            <div id="manual-content-passo1" class="manual-tab-content space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Bem-vindo ao Controle Financeiro v22</h4>
+                <p>O sistema foi desenvolvido para gerenciar orçamentos pessoais e familiares em computadores e celulares de forma multiusuário.</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Login Seguro:</strong> Insira seu usuário e senha cadastrados. Os campos iniciam em branco para maior segurança.</li>
+                    <li><strong>Recuperação de Senha:</strong> Caso esqueça, utilize o link na tela de login informando seu e-mail cadastrado (ex: marcoaurelio_rigo@hotmail.com).</li>
+                </ul>
+            </div>
 
-                <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border space-y-1">
-                    <h5 class="font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-microphone-lines text-indigo-500 mr-1"></i> 4. Assistente de Voz Inteligente</h5>
-                    <p class="text-xs">Clique no microfone para conversar com a IA. Ela interpreta seus comandos e responde em voz alta com síntese natural, trazendo dados em tempo real sobre seu saldo e maiores despesas.</p>
-                </div>
+            <div id="manual-content-passo2" class="manual-tab-content hidden space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Gestão de Lançamentos e Períodos</h4>
+                <p>Na aba <strong>Lançamentos</strong>, você controla todas as receitas e despesas.</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Novo Mês / Replicar:</strong> Crie novos meses ou replique dados de meses anteriores rapidamente.</li>
+                    <li><strong>Exclusão de Meses:</strong> Agora é permitido excluir meses vazios sem lançamentos com total liberdade.</li>
+                    <li><strong>Status:</strong> Marque como "Pago" ou "A Pagar" para acompanhar suas pendências.</li>
+                </ul>
+            </div>
+
+            <div id="manual-content-passo3" class="manual-tab-content hidden space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Assistente de Voz Inteligente</h4>
+                <p>Converse com a IA usando o microfone 🎙️ ou digitando no chat do Dashboard.</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Respostas em Tempo Real:</strong> A IA lê diretamente os lançamentos do mês ativo para informar saldo, maiores despesas e contas em aberto.</li>
+                    <li><strong>Voz Fluida:</strong> Síntese de fala otimizada em português do Brasil com velocidade natural.</li>
+                </ul>
+            </div>
+
+            <div id="manual-content-passo4" class="manual-tab-content hidden space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Segurança, Perfis e Ícone PNG</h4>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Controle de Concorrência:</strong> O sistema bloqueia edições simultâneas no mesmo registro, evitando conflitos entre usuários.</li>
+                    <li><strong>Logs de Auditoria:</strong> Rastreie todas as operações na aba de logs.</li>
+                    <li><strong>Baixar Ícone 512x512:</strong> Utilize o botão no cabeçalho para baixar o ícone PNG oficial do aplicativo.</li>
+                </ul>
             </div>
 
             <div class="flex justify-end pt-2 border-t dark:border-slate-700">
@@ -544,7 +561,7 @@
         </div>
     </div>
 
-    <!-- MODAL ATUALIZAÇÕES / RELEASE NOTES -->
+    <!-- MODAL ATUALIZAÇÕES -->
     <div id="modal-atualizacoes" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-4xl w-full space-y-5 shadow-xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3">
@@ -553,33 +570,24 @@
             </div>
             
             <div class="space-y-6 text-sm text-slate-600 dark:text-slate-300">
-                <!-- Versão 21 -->
+                <!-- Versão 22 -->
                 <div class="bg-emerald-50 dark:bg-slate-900/60 p-4 rounded-xl border border-emerald-200 dark:border-emerald-900 space-y-2">
                     <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-emerald-700 dark:text-emerald-400 text-base">Versão 21 (Atual)</h4>
+                        <h4 class="font-bold text-emerald-700 dark:text-emerald-400 text-base">Versão 22 (Atual)</h4>
                         <span class="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">Mais Recente</span>
                     </div>
                     <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li><strong>IA Inteligente e Direta:</strong> Correção completa no chatbot, garantindo respostas contextuais baseadas em saldos, maiores despesas, contas pendentes e busca de termos específicos.</li>
-                        <li><strong>Exclusão de Meses Vazios:</strong> Adicionada gestão de meses customizados, permitindo excluir meses sem lançamentos com facilidade.</li>
-                        <li><strong>Voz Fluida e Microfone Persistente:</strong> Síntese de fala otimizada e persistência de permissão de microfone.</li>
+                        <li><strong>Baixar Ícone 512x512 PNG:</strong> Ferramenta integrada no cabeçalho para gerar e baixar instantaneamente o ícone oficial do aplicativo.</li>
+                        <li><strong>Manual Interativo por Abas:</strong> Guia de ajuda estruturado em abas temáticas para navegação fluida.</li>
+                        <li><strong>IA Integrada aos Lançamentos:</strong> Respostas precisas baseadas nos dados reais do mês selecionado.</li>
                     </ul>
                 </div>
 
-                <!-- Versão 20 -->
+                <!-- Versão 21 -->
                 <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border space-y-2">
-                    <h4 class="font-bold text-slate-800 dark:text-white text-base">Versão 20</h4>
+                    <h4 class="font-bold text-slate-800 dark:text-white text-base">Versão 21</h4>
                     <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li>Criação do botão de Atualizações dedicado na barra superior.</li>
-                        <li>Otimização de velocidade da voz da IA (`rate = 1.15`).</li>
-                    </ul>
-                </div>
-
-                <!-- Versão 19 -->
-                <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border space-y-2">
-                    <h4 class="font-bold text-slate-800 dark:text-white text-base">Versão 19</h4>
-                    <ul class="list-disc pl-5 space-y-1 text-xs">
-                        <li>Controle de concorrência (*locking*), logs de auditoria e recuperação inteligente de senha.</li>
+                        <li>Exclusão de meses vazios liberada e melhorias na interpretação do chatbot.</li>
                     </ul>
                 </div>
             </div>
@@ -734,8 +742,8 @@
         let state = {
             currentUser: null,
             mesAtivo: "2026-10",
-            mesesCustomizados: JSON.parse(localStorage.getItem('cf_v21_meses')) || ["2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"],
-            perfis: JSON.parse(localStorage.getItem('cf_v21_perfis')) || [
+            mesesCustomizados: JSON.parse(localStorage.getItem('cf_v22_meses')) || ["2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"],
+            perfis: JSON.parse(localStorage.getItem('cf_v22_perfis')) || [
                 { 
                     id: 1, 
                     nome: 'Administrador Master', 
@@ -751,13 +759,13 @@
                     telas: { dashboard: true, transacoes: true, relatorios: true, perfis: false, usuarios: false, logs: false } 
                 }
             ],
-            usuarios: JSON.parse(localStorage.getItem('cf_v21_usuarios')) || [
+            usuarios: JSON.parse(localStorage.getItem('cf_v22_usuarios')) || [
                 { id: 1, nome: 'Administrador Master', login: 'admin', email: 'admin@controle.com', senha: '123', perfilId: 1, theme: 'light' },
                 { id: 2, nome: 'Marco Aurélio Rigo', login: 'marco.rigo', email: 'marcoaurelio_rigo@hotmail.com', senha: '123456', perfilId: 1, theme: 'light' }
             ],
-            transacoes: JSON.parse(localStorage.getItem('cf_v21_transacoes')) || initialTransacoes,
-            logs: JSON.parse(localStorage.getItem('cf_v21_logs')) || [],
-            locks: JSON.parse(localStorage.getItem('cf_v21_locks')) || {}
+            transacoes: JSON.parse(localStorage.getItem('cf_v22_transacoes')) || initialTransacoes,
+            logs: JSON.parse(localStorage.getItem('cf_v22_logs')) || [],
+            locks: JSON.parse(localStorage.getItem('cf_v22_locks')) || {}
         };
 
         let chartBalancoInstance = null;
@@ -766,24 +774,95 @@
         let globalRecognition = null;
 
         function saveState() {
-            localStorage.setItem('cf_v21_meses', JSON.stringify(state.mesesCustomizados));
-            localStorage.setItem('cf_v21_perfis', JSON.stringify(state.perfis));
-            localStorage.setItem('cf_v21_usuarios', JSON.stringify(state.usuarios));
-            localStorage.setItem('cf_v21_transacoes', JSON.stringify(state.transacoes));
-            localStorage.setItem('cf_v21_logs', JSON.stringify(state.logs));
-            localStorage.setItem('cf_v21_locks', JSON.stringify(state.locks));
+            localStorage.setItem('cf_v22_meses', JSON.stringify(state.mesesCustomizados));
+            localStorage.setItem('cf_v22_perfis', JSON.stringify(state.perfis));
+            localStorage.setItem('cf_v22_usuarios', JSON.stringify(state.usuarios));
+            localStorage.setItem('cf_v22_transacoes', JSON.stringify(state.transacoes));
+            localStorage.setItem('cf_v22_logs', JSON.stringify(state.logs));
+            localStorage.setItem('cf_v22_locks', JSON.stringify(state.locks));
             render();
         }
 
         window.addEventListener('storage', () => {
-            state.mesesCustomizados = JSON.parse(localStorage.getItem('cf_v21_meses')) || state.mesesCustomizados;
-            state.perfis = JSON.parse(localStorage.getItem('cf_v21_perfis')) || state.perfis;
-            state.usuarios = JSON.parse(localStorage.getItem('cf_v21_usuarios')) || state.usuarios;
-            state.transacoes = JSON.parse(localStorage.getItem('cf_v21_transacoes')) || state.transacoes;
-            state.logs = JSON.parse(localStorage.getItem('cf_v21_logs')) || state.logs;
-            state.locks = JSON.parse(localStorage.getItem('cf_v21_locks')) || state.locks;
+            state.mesesCustomizados = JSON.parse(localStorage.getItem('cf_v22_meses')) || state.mesesCustomizados;
+            state.perfis = JSON.parse(localStorage.getItem('cf_v22_perfis')) || state.perfis;
+            state.usuarios = JSON.parse(localStorage.getItem('cf_v22_usuarios')) || state.usuarios;
+            state.transacoes = JSON.parse(localStorage.getItem('cf_v22_transacoes')) || state.transacoes;
+            state.logs = JSON.parse(localStorage.getItem('cf_v22_logs')) || state.logs;
+            state.locks = JSON.parse(localStorage.getItem('cf_v22_locks')) || state.locks;
             render();
         });
+
+        // --- GERADOR DE ÍCONE 512x512 PNG (Item 3) ---
+        function baixarIcone512() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Fundo gradiente arredondado
+            const grad = ctx.createLinearGradient(0, 0, 512, 512);
+            grad.addColorStop(0, '#4f46e5'); // indigo-600
+            grad.addColorStop(1, '#312e81'); // indigo-900
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Símbolo de Carteira Executiva / Finanças
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(80, 160, 352, 220, 32);
+            ctx.fill();
+            
+            // Aba da Carteira
+            ctx.fillStyle = '#818cf8';
+            ctx.beginPath();
+            ctx.roundRect(280, 210, 170, 100, 20);
+            ctx.fill();
+            
+            // Botão / Fechamento dourado
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(365, 260, 18, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Linhas de Gráfico Financeiro
+            ctx.strokeStyle = '#4f46e5';
+            ctx.lineWidth = 14;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(130, 230);
+            ctx.lineTo(190, 230);
+            ctx.moveTo(130, 290);
+            ctx.lineTo(230, 290);
+            ctx.stroke();
+
+            // Download automático
+            const link = document.createElement('a');
+            link.download = 'icone_controle_financeiro_512x512.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- MANUAL INTERATIVO (Item 2) ---
+        function abrirModalManual() { 
+            document.getElementById('modal-manual').classList.remove('hidden'); 
+            switchManualTab('passo1');
+        }
+        function fecharModalManual() { document.getElementById('modal-manual').classList.add('hidden'); }
+
+        function switchManualTab(tab) {
+            ['passo1', 'passo2', 'passo3', 'passo4'].forEach(t => {
+                document.getElementById('manual-content-' + t).classList.add('hidden');
+                const btn = document.getElementById('btn-manual-' + t);
+                btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors";
+            });
+            document.getElementById('manual-content-' + tab).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-manual-' + tab);
+            activeBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition-colors";
+        }
+
+        function abrirModalAtualizacoes() { document.getElementById('modal-atualizacoes').classList.remove('hidden'); }
+        function fecharModalAtualizacoes() { document.getElementById('modal-atualizacoes').classList.add('hidden'); }
 
         // --- REGISTRO DE LOGS ---
         function registrarLog(acao, detalhes) {
@@ -791,7 +870,7 @@
             const dataHora = new Date().toLocaleString('pt-BR');
             state.logs.unshift({ id: Date.now(), dataHora, usuario: userLogin, acao, detalhes });
             if (state.logs.length > 100) state.logs.pop();
-            localStorage.setItem('cf_v21_logs', JSON.stringify(state.logs));
+            localStorage.setItem('cf_v22_logs', JSON.stringify(state.logs));
         }
 
         function limparLogs() {
@@ -909,13 +988,6 @@
                 alert('Erro ao atualizar senha.');
             }
         }
-
-        // --- MANUAIS E ATUALIZAÇÕES ---
-        function abrirModalManual() { document.getElementById('modal-manual').classList.remove('hidden'); }
-        function fecharModalManual() { document.getElementById('modal-manual').classList.add('hidden'); }
-
-        function abrirModalAtualizacoes() { document.getElementById('modal-atualizacoes').classList.remove('hidden'); }
-        function fecharModalAtualizacoes() { document.getElementById('modal-atualizacoes').classList.add('hidden'); }
 
         // --- TEMA ---
         function toggleTheme() {
@@ -1075,10 +1147,7 @@
             }
             if (!confirm(`Deseja excluir o mês ${state.mesAtivo}?`)) return;
 
-            // Remove dos meses customizados
             state.mesesCustomizados = state.mesesCustomizados.filter(m => m !== state.mesAtivo);
-            
-            // Seleciona outro mês disponível
             const disponiveis = getMesesDisponiveis().filter(m => m !== state.mesAtivo);
             state.mesAtivo = disponiveis.length > 0 ? disponiveis[0] : '2026-10';
             
@@ -1086,7 +1155,7 @@
             saveState();
         }
 
-        // --- TRANSAÇÕES (Com Validação Estrita & Concorrência / Locking) ---
+        // --- TRANSAÇÕES ---
         function saveTransacao(e) {
             e.preventDefault();
             const editId = document.getElementById('trans-edit-id').value;
@@ -1146,12 +1215,12 @@
 
             const lockKey = 'trans_' + id;
             if (state.locks[lockKey] && state.locks[lockKey] !== (state.currentUser ? state.currentUser.login : '')) {
-                alert(`⚠️ Concorrência Detectada: Este registro está sendo editado neste momento pelo usuário [${state.locks[lockKey]}]. Tente novamente mais tarde.`);
+                alert(`⚠️ Concorrência Detectada: Este registro está sendo editado neste momento pelo usuário [${state.locks[lockKey]}].`);
                 return;
             }
 
             state.locks[lockKey] = state.currentUser ? state.currentUser.login : 'admin';
-            localStorage.setItem('cf_v21_locks', JSON.stringify(state.locks));
+            localStorage.setItem('cf_v22_locks', JSON.stringify(state.locks));
 
             const t = state.transacoes.find(item => item.id == id);
             if (!t) return;
@@ -1174,7 +1243,7 @@
             const editId = document.getElementById('trans-edit-id').value;
             if (editId) {
                 delete state.locks['trans_' + editId];
-                localStorage.setItem('cf_v21_locks', JSON.stringify(state.locks));
+                localStorage.setItem('cf_v22_locks', JSON.stringify(state.locks));
             }
             document.getElementById('trans-edit-id').value = '';
             document.getElementById('form-transacao').reset();
@@ -1330,14 +1399,14 @@
             saveState();
         }
 
-        // --- VOZ NATURAL OTIMIZADA & RECONHECIMENTO PERSISTENTE ---
+        // --- VOZ NATURAL & RECONHECIMENTO PERSISTENTE (Item 1) ---
         function falarResposta(texto) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const textoLimpo = texto.replace(/<\/?[^>]+(>|$)/g, "").replace(/&bull;/g, "").replace(/💡|📊|🤖|✔/g, "");
                 const utterance = new SpeechSynthesisUtterance(textoLimpo);
                 utterance.lang = 'pt-BR';
-                utterance.rate = 1.15; // Dinâmico e natural
+                utterance.rate = 1.15;
                 utterance.pitch = 1.0;
 
                 const voices = window.speechSynthesis.getVoices();
@@ -1384,7 +1453,7 @@
 
         function handleChatKey(e) { if (e.key === 'Enter') enviarMensagemIA(); }
 
-        // Inteligência de Intenções Robusta (Versão 21)
+        // Inteligência da IA verificando os lançamentos do sistema (Item 1)
         function enviarMensagemIA() {
             const input = document.getElementById('chat-input');
             const pergunta = input.value.trim();
@@ -1433,7 +1502,6 @@
                 resposta = `Suas despesas em ${mesSel} estão em R$ ${desp.toFixed(2)}. Cortando 15%, você economizará cerca de R$ ${meta15.toFixed(2)} para sua reserva.`;
             } 
             else {
-                // Busca inteligente por palavra-chave nos lançamentos
                 let encontrados = transMes.filter(t => t.descricao.toLowerCase().split(' ').some(palavra => palavra.length > 2 && p.includes(palavra)));
                 if (encontrados.length > 0) {
                     let descricoes = encontrados.map(e => `${e.descricao} (R$ ${e.valor.toFixed(2)})`).join(', ');
