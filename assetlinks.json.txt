@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.onrender.controle_financeiro_familiar_w571.twa",
+      "sha256_cert_fingerprints": [
+        "B6:55:94:65:44:3C:63:5A:4F:68:9E:47:83:3A:A8:62:A0:55:9B:F8:8B:42:08:E1:84:6D:40:D5:09:4F:D2:D7"
+      ]
+    }
+  }
+]
