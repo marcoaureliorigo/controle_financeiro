@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="pt-BR" id="html-root">
+<head>
+<!-- Link para o Manifesto -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Script para ativar o Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log("Service Worker Registrado!"));
+  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Financeiro - Versão 22</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS para Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- 1. TELA DE LOGIN -->
+    <div id="screen-login" class="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 p-4">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-w-md w-full space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-2xl mb-2">
+                    <i class="fa-solid fa-wallet text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Controle Financeiro</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Entre com suas credenciais de acesso</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">Usuário / Login</label>
+                    <input type="text" id="login-usuario" value="" placeholder="Digite seu login" required class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">Senha</label>
+                    <div class="relative">
+                        <input type="password" id="login-senha" value="" placeholder="Digite sua senha" required class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <button type="button" onclick="togglePasswordVisibility('login-senha', 'icon-eye-login')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <i id="icon-eye-login" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <button type="button" onclick="abrirModalEsqueceuSenha()" class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">Esqueceu a Senha?</button>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors shadow-sm">
+                    Entrar no Sistema
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. SISTEMA PRINCIPAL -->
+    <div id="screen-app" class="hidden min-h-screen flex flex-col justify-between">
+        <div>
+            <!-- Header -->
+            <header class="bg-indigo-600 dark:bg-indigo-900 text-white shadow-md">
+                <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-wallet text-2xl"></i>
+                        <h1 class="text-xl font-bold">Controle Financeiro <span class="text-xs bg-indigo-800 px-2 py-0.5 rounded">v22</span></h1>
+                    </div>
+                    <div class="flex items-center flex-wrap gap-2 justify-end">
+                        <button onclick="baixarIcone512()" class="text-sm bg-indigo-700 dark:bg-indigo-800 hover:bg-indigo-800 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1" title="Baixar Ícone 512x512 PNG">
+                            <i class="fa-solid fa-download"></i>
+                            <span class="text-xs hidden sm:inline">Baixar Ícone</span>
+                        </button>
+                        <button onclick="abrirModalManual()" class="text-sm bg-indigo-700 dark:bg-indigo-800 hover:bg-indigo-800 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1" title="Manual Interativo">
+                            <i class="fa-solid fa-book"></i>
+                            <span class="text-xs hidden sm:inline">Manual</span>
+                        </button>
+                        <button onclick="abrirModalAtualizacoes()" class="text-sm bg-emerald-700 hover:bg-emerald-800 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1" title="Novidades da Versão">
+                            <i class="fa-solid fa-bullhorn"></i>
+                            <span class="text-xs hidden sm:inline">Atualizações</span>
+                        </button>
+                        <button onclick="toggleTheme()" class="text-sm bg-indigo-700 dark:bg-indigo-800 hover:bg-indigo-800 px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1" title="Alternar Tema">
+                            <i id="theme-icon" class="fa-solid fa-moon"></i>
+                            <span class="text-xs hidden sm:inline">Tema</span>
+                        </button>
+                        <div class="text-sm bg-indigo-700 dark:bg-indigo-800 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-user-circle"></i>
+                            <span id="logged-user-name">Usuário</span>
+                            <span id="logged-user-perfil" class="bg-indigo-900 dark:bg-indigo-950 text-indigo-200 text-xs px-2 py-0.5 rounded font-semibold">Perfil</span>
+                        </div>
+                        <button onclick="handleLogout()" class="text-sm bg-indigo-800 dark:bg-indigo-950 hover:bg-indigo-900 px-3 py-1.5 rounded-lg transition-colors">
+                            <i class="fa-solid fa-right-from-bracket"></i> Sair
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Container -->
+            <div class="max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+                
+                <!-- Navigation Sidebar -->
+                <nav id="sidebar-nav" class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 h-fit space-y-2">
+                    <!-- Dinâmico -->
+                </nav>
+
+                <!-- Main Content Area -->
+                <main class="md:col-span-3 space-y-6">
+
+                    <!-- TAB 1: DASHBOARD & IA -->
+                    <div id="tab-dashboard" class="tab-content space-y-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 gap-3">
+                            <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Dashboard Financeiro & Consultoria IA</h3>
+                            <div class="flex items-center space-x-2 w-full sm:w-auto">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Mês:</label>
+                                <select id="dash-filter-mes" onchange="atualizarDashboardPorMes()" class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Saldo do Mês</p>
+                                <h3 id="dash-saldo" class="text-2xl font-bold mt-1">R$ 0,00</h3>
+                            </div>
+                            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Receitas</p>
+                                <h3 id="dash-receitas" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">R$ 0,00</h3>
+                            </div>
+                            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Total Despesas</p>
+                                <h3 id="dash-despesas" class="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">R$ 0,00</h3>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <h3 class="text-md font-semibold text-slate-800 dark:text-white mb-4">Balanço (Receitas x Despesas)</h3>
+                                <canvas id="chartBalanco" height="180"></canvas>
+                            </div>
+                            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <h3 class="text-md font-semibold text-slate-800 dark:text-white mb-4">Maiores Despesas</h3>
+                                <canvas id="chartCategorias" height="180"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Chat Interativo com IA -->
+                        <div class="bg-gradient-to-r from-indigo-900 to-indigo-700 dark:from-slate-800 dark:to-indigo-950 text-white p-6 rounded-xl shadow-sm space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="bg-indigo-500 p-3 rounded-xl">
+                                    <i class="fa-solid fa-microphone-lines text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold">Assistente IA Especialista (Voz Fluida & Análise de Lançamentos)</h3>
+                                    <p class="text-xs text-indigo-200">Fale pelo microfone ou digite. A IA analisa seus dados reais para responder sobre saldos, maiores gastos e contas pendentes.</p>
+                                </div>
+                            </div>
+                            <div id="chat-container" class="bg-indigo-950/60 dark:bg-slate-900/80 p-4 rounded-lg text-sm text-indigo-100 max-h-60 overflow-y-auto space-y-3 border border-indigo-800">
+                                <p><strong>🤖 IA:</strong> Olá! Estou pronta para responder suas dúvidas sobre gastos, saldos e contas. Clique no microfone 🎙️ para falar comigo.</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" id="mic-btn" onclick="toggleSpeechRecognition()" title="Falar com a IA" class="bg-indigo-800 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center justify-center">
+                                    <i class="fa-solid fa-microphone text-lg"></i>
+                                </button>
+                                <input type="text" id="chat-input" placeholder="Ex: Qual foi minha maior despesa? Quanto tenho de saldo?" onkeypress="handleChatKey(event)" class="flex-1 bg-indigo-950 border border-indigo-700 rounded-lg px-3 py-2 text-sm text-white placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                <button onclick="enviarMensagemIA()" class="bg-white text-indigo-900 hover:bg-indigo-50 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: LANÇAMENTOS -->
+                    <div id="tab-transacoes" class="tab-content hidden space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <div class="flex items-center space-x-3 w-full sm:w-auto">
+                                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Mês:</label>
+                                <select id="select-mes-ativo" onchange="mudarMesAtivo()" class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-slate-700">
+                                </select>
+                            </div>
+                            <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-end">
+                                <button onclick="abrirModalNovoMes()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    <i class="fa-solid fa-calendar-plus mr-1"></i> Novo Mês
+                                </button>
+                                <button onclick="abrirModalReplicar()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    <i class="fa-solid fa-copy mr-1"></i> Replicar Mês...
+                                </button>
+                                <button onclick="deletarMesAtual()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    <i class="fa-solid fa-trash-can mr-1"></i> Excluir Mês
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Formulário Novo / Editar Lançamento -->
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 id="form-trans-title" class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Adicionar Lançamento</h3>
+                            <form id="form-transacao" onsubmit="saveTransacao(event)" class="grid grid-cols-1 sm:grid-cols-6 gap-3">
+                                <input type="hidden" id="trans-edit-id" value="">
+                                <input type="text" id="trans-desc" placeholder="Descrição" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <input type="number" step="0.01" min="0.01" id="trans-valor" placeholder="Valor (R$)" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <input type="date" id="trans-data" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <select id="trans-tipo" class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="despesa">Despesa</option>
+                                    <option value="receita">Receita</option>
+                                </select>
+                                <select id="trans-status" class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option value="pago">Pago</option>
+                                    <option value="pendente">A Pagar</option>
+                                </select>
+                                <div class="flex gap-2">
+                                    <button type="submit" id="btn-salvar-trans" class="flex-1 bg-indigo-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-indigo-700 transition-colors">Salvar</button>
+                                    <button type="button" id="btn-cancel-edit" onclick="cancelarEdicaoTransacao()" class="hidden bg-slate-400 text-white rounded-lg px-2 py-2 text-sm font-medium hover:bg-slate-500">X</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Tabela de Lançamentos -->
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Lançamentos do Período</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 uppercase text-xs">
+                                        <tr>
+                                            <th class="p-3">Data</th>
+                                            <th class="p-3">Descrição</th>
+                                            <th class="p-3">Valor</th>
+                                            <th class="p-3">Tipo</th>
+                                            <th class="p-3">Status</th>
+                                            <th class="p-3 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-transacoes" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: RELATÓRIOS -->
+                    <div id="tab-relatorios" class="tab-content hidden space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
+                            <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Gerador de Relatórios</h3>
+                            <div class="flex flex-col sm:flex-row items-center gap-4 pt-2">
+                                <div class="w-full sm:w-auto">
+                                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">Filtrar por Mês</label>
+                                    <select id="select-relatorio-mes" onchange="render()" class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-full sm:w-64">
+                                    </select>
+                                </div>
+                                <div class="flex space-x-3 w-full sm:w-auto mt-auto">
+                                    <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center space-x-2">
+                                        <i class="fa-solid fa-file-excel"></i> <span>Excel</span>
+                                    </button>
+                                    <button onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center space-x-2">
+                                        <i class="fa-solid fa-file-pdf"></i> <span>Imprimir / PDF</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Área de Impressão -->
+                        <div id="print-area" class="bg-white text-slate-900 p-8 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                            <div class="flex justify-between items-center border-b pb-4">
+                                <div>
+                                    <h2 class="text-2xl font-bold text-slate-900">Controle Financeiro</h2>
+                                    <p id="rel-titulo" class="text-sm font-semibold text-indigo-600">Relatório de Lançamentos</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-500">Emissão:</p>
+                                    <p id="rel-data-emissao" class="text-sm font-bold text-slate-800"></p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-slate-50 p-3 rounded-lg border">
+                                    <span class="text-xs text-slate-500 block">Receitas</span>
+                                    <span id="rel-total-rec" class="text-lg font-bold text-emerald-600">R$ 0,00</span>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-lg border">
+                                    <span class="text-xs text-slate-500 block">Despesas</span>
+                                    <span id="rel-total-desp" class="text-lg font-bold text-rose-600">R$ 0,00</span>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-lg border">
+                                    <span class="text-xs text-slate-500 block">Saldo</span>
+                                    <span id="rel-saldo-per" class="text-lg font-bold text-slate-900">R$ 0,00</span>
+                                </div>
+                            </div>
+                            <table class="w-full text-left text-sm border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 border-b text-slate-700">
+                                        <th class="p-3">Data</th>
+                                        <th class="p-3">Descrição</th>
+                                        <th class="p-3">Tipo</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3 text-right">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-relatorio-preview" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: PERFIS -->
+                    <div id="tab-perfis" class="tab-content hidden space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
+                            <h3 id="form-perfil-title" class="text-lg font-semibold text-slate-800 dark:text-white">Cadastrar / Editar Perfil e Permissões</h3>
+                            <form id="form-perfil" onsubmit="savePerfil(event)" class="space-y-4">
+                                <input type="hidden" id="perfil-edit-id" value="">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <input type="text" id="perfil-nome" placeholder="Nome do Perfil" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <input type="text" id="perfil-desc" placeholder="Descrição" class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                </div>
+                                <div class="space-y-2 pt-2">
+                                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300">Permissões de Lançamentos</label>
+                                    <div class="flex flex-wrap gap-4 text-sm">
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="perm-criar" checked class="rounded text-indigo-600"> <span>Criar</span></label>
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="perm-editar" checked class="rounded text-indigo-600"> <span>Editar</span></label>
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="perm-visualizar" checked class="rounded text-indigo-600"> <span>Visualizar</span></label>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 pt-2 border-t dark:border-slate-700">
+                                    <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300">Acesso a Telas / Módulos</label>
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="tela-dashboard" checked class="rounded text-indigo-600"> <span>Dashboard & IA</span></label>
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="tela-transacoes" checked class="rounded text-indigo-600"> <span>Lançamentos</span></label>
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="tela-relatorios" checked class="rounded text-indigo-600"> <span>Relatórios</span></label>
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="tela-perfis" checked class="rounded text-indigo-600"> <span>Perfis de Acesso</span></label>
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="tela-usuarios" checked class="rounded text-indigo-600"> <span>Usuários</span></label>
+                                        <label class="flex items-center space-x-2"><input type="checkbox" id="tela-logs" checked class="rounded text-indigo-600"> <span>Logs do Sistema</span></label>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end space-x-2 pt-2">
+                                    <button type="button" id="btn-cancel-perfil-edit" onclick="cancelarEdicaoPerfil()" class="hidden bg-slate-400 text-white rounded-lg px-4 py-2 text-sm font-medium">Cancelar</button>
+                                    <button type="submit" id="btn-salvar-perfil" class="bg-indigo-600 text-white rounded-lg px-5 py-2 text-sm font-medium hover:bg-indigo-700 transition-colors">Salvar Perfil</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Perfis Cadastrados</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 uppercase text-xs">
+                                        <tr>
+                                            <th class="p-3">Nome</th>
+                                            <th class="p-3">Permissões</th>
+                                            <th class="p-3 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-perfis" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: USUÁRIOS -->
+                    <div id="tab-usuarios" class="tab-content hidden space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Cadastrar / Editar Usuário</h3>
+                            <form id="form-usuario" onsubmit="saveUsuario(event)" class="space-y-4">
+                                <input type="hidden" id="user-edit-id" value="">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <input type="text" id="user-nome" placeholder="Nome Completo" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <input type="email" id="user-email" placeholder="E-mail (Ex: marcoaurelio_rigo@hotmail.com)" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <input type="text" id="user-login" placeholder="Login de Acesso" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <div class="relative">
+                                        <input type="password" id="user-senha" placeholder="Senha" required class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                        <button type="button" onclick="togglePasswordVisibility('user-senha', 'icon-eye-user')" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                                            <i id="icon-eye-user" class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <select id="user-perfil" required class="border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none sm:col-span-2">
+                                        <option value="">Selecione o Perfil...</option>
+                                    </select>
+                                </div>
+                                <div class="flex justify-end space-x-2">
+                                    <button type="button" id="btn-cancel-user-edit" onclick="cancelarEdicaoUsuario()" class="hidden bg-slate-400 text-white rounded-lg px-4 py-2 text-sm font-medium">Cancelar</button>
+                                    <button type="submit" id="btn-salvar-user" class="bg-indigo-600 text-white rounded-lg px-5 py-2 text-sm font-medium hover:bg-indigo-700 transition-colors">Salvar Usuário</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <h3 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Usuários Cadastrados</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 uppercase text-xs">
+                                        <tr>
+                                            <th class="p-3">Nome</th>
+                                            <th class="p-3">Login</th>
+                                            <th class="p-3">E-mail</th>
+                                            <th class="p-3">Perfil</th>
+                                            <th class="p-3 text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-usuarios" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 6: LOGS DE AUDITORIA -->
+                    <div id="tab-logs" class="tab-content hidden space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-800 dark:text-white">Logs de Auditoria e Atividade</h3>
+                                <p class="text-xs text-slate-500">Registro automático de todas as criações, edições e exclusões no sistema.</p>
+                            </div>
+                            <button onclick="limparLogs()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
+                                <i class="fa-solid fa-trash mr-1"></i> Limpar Logs
+                            </button>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 uppercase text-xs">
+                                        <tr>
+                                            <th class="p-3">Data / Hora</th>
+                                            <th class="p-3">Usuário</th>
+                                            <th class="p-3">Ação</th>
+                                            <th class="p-3">Detalhes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabela-logs" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+
+        <!-- RODAPÉ -->
+        <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mt-10 py-4 px-6 text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div>
+                <strong>Controle Financeiro</strong> &bull; Sistema de Gestão Multiusuário &bull; <span class="text-indigo-600 dark:text-indigo-400 font-bold">Versão 22</span>
+            </div>
+            <div id="footer-user-status" class="flex items-center space-x-2">
+                <i class="fa-solid fa-circle text-emerald-500 text-[8px]"></i>
+                <span>Conectado como: <strong id="footer-username">-</strong> (<span id="footer-userperfil">-</span>)</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- MODAL DE NOVO MÊS -->
+    <div id="modal-novo-mes" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-sm w-full space-y-4 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Criar Novo Mês</h3>
+            <input type="month" id="input-novo-mes-val" class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <div class="flex justify-end space-x-2">
+                <button onclick="fecharModalNovoMes()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
+                <button onclick="criarNovoMes()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Criar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REPLICAR MÊS -->
+    <div id="modal-replicar" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-md w-full space-y-4 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-copy text-indigo-600 mr-2"></i> Replicar Lançamentos</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Selecione o mês de origem para copiar os lançamentos para o mês ativo atual (<strong id="modal-mes-destino-txt"></strong>):</p>
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">Mês de Origem</label>
+                <select id="select-mes-origem-replicar" class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </select>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="fecharModalReplicar()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
+                <button onclick="confirmarReplicacaoMes()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Replicar Agora</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RECUPERAÇÃO DE SENHA INTELIGENTE -->
+    <div id="modal-forgot" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-md w-full space-y-4 shadow-xl">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-key text-indigo-600 mr-2"></i> Recuperação Inteligente de Senha</h3>
+            <div id="forgot-step-1" class="space-y-3">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Informe seu login e o e-mail cadastrado (Ex: <strong>marcoaurelio_rigo@hotmail.com</strong>).</p>
+                <input type="text" id="forgot-login" placeholder="Seu login de usuário" class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm">
+                <input type="email" id="forgot-email" placeholder="Seu e-mail cadastrado" class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm">
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button onclick="fecharModalEsqueceuSenha()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
+                    <button onclick="verificarEmailRecuperacao()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Avançar</button>
+                </div>
+            </div>
+            <div id="forgot-step-2" class="space-y-3 hidden">
+                <p class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">✔ E-mail validado com sucesso! Insira sua nova senha abaixo:</p>
+                <input type="password" id="forgot-new-pass" placeholder="Nova senha" class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm">
+                <input type="password" id="forgot-confirm-pass" placeholder="Confirme a nova senha" class="w-full border dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-2 text-sm">
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button onclick="fecharModalEsqueceuSenha()" class="px-4 py-2 border rounded-lg text-sm">Cancelar</button>
+                    <button onclick="salvarNovaSenhaRecuperada()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium">Salvar Nova Senha</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MANUAL INTERATIVO (Versão 22) -->
+    <div id="modal-manual" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-4xl w-full space-y-5 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-book-open text-indigo-600 mr-2"></i> Manual Interativo do Sistema</h3>
+                <button onclick="fecharModalManual()" class="text-slate-500 hover:text-slate-700 font-bold text-xl">&times;</button>
+            </div>
+            
+            <!-- Abas do Manual -->
+            <div class="flex flex-wrap gap-2 border-b dark:border-slate-700 pb-2">
+                <button onclick="switchManualTab('passo1')" id="btn-manual-passo1" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition-colors">1. Primeiros Passos</button>
+                <button onclick="switchManualTab('passo2')" id="btn-manual-passo2" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">2. Lançamentos & Meses</button>
+                <button onclick="switchManualTab('passo3')" id="btn-manual-passo3" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">3. Assistente de Voz IA</button>
+                <button onclick="switchManualTab('passo4')" id="btn-manual-passo4" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors">4. Segurança & Ícone</button>
+            </div>
+
+            <!-- Conteúdo das Abas -->
+            <div id="manual-content-passo1" class="manual-tab-content space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Bem-vindo ao Controle Financeiro v22</h4>
+                <p>O sistema foi desenvolvido para gerenciar orçamentos pessoais e familiares em computadores e celulares de forma multiusuário.</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Login Seguro:</strong> Insira seu usuário e senha cadastrados. Os campos iniciam em branco para maior segurança.</li>
+                    <li><strong>Recuperação de Senha:</strong> Caso esqueça, utilize o link na tela de login informando seu e-mail cadastrado (ex: marcoaurelio_rigo@hotmail.com).</li>
+                </ul>
+            </div>
+
+            <div id="manual-content-passo2" class="manual-tab-content hidden space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Gestão de Lançamentos e Períodos</h4>
+                <p>Na aba <strong>Lançamentos</strong>, você controla todas as receitas e despesas.</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Novo Mês / Replicar:</strong> Crie novos meses ou replique dados de meses anteriores rapidamente.</li>
+                    <li><strong>Exclusão de Meses:</strong> Agora é permitido excluir meses vazios sem lançamentos com total liberdade.</li>
+                    <li><strong>Status:</strong> Marque como "Pago" ou "A Pagar" para acompanhar suas pendências.</li>
+                </ul>
+            </div>
+
+            <div id="manual-content-passo3" class="manual-tab-content hidden space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Assistente de Voz Inteligente</h4>
+                <p>Converse com a IA usando o microfone 🎙️ ou digitando no chat do Dashboard.</p>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Respostas em Tempo Real:</strong> A IA lê diretamente os lançamentos do mês ativo para informar saldo, maiores despesas e contas em aberto.</li>
+                    <li><strong>Voz Fluida:</strong> Síntese de fala otimizada em português do Brasil com velocidade natural.</li>
+                </ul>
+            </div>
+
+            <div id="manual-content-passo4" class="manual-tab-content hidden space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <h4 class="font-bold text-indigo-600 dark:text-indigo-400 text-base">Segurança, Perfis e Ícone PNG</h4>
+                <ul class="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Controle de Concorrência:</strong> O sistema bloqueia edições simultâneas no mesmo registro, evitando conflitos entre usuários.</li>
+                    <li><strong>Logs de Auditoria:</strong> Rastreie todas as operações na aba de logs.</li>
+                    <li><strong>Baixar Ícone 512x512:</strong> Utilize o botão no cabeçalho para baixar o ícone PNG oficial do aplicativo.</li>
+                </ul>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t dark:border-slate-700">
+                <button onclick="fecharModalManual()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ATUALIZAÇÕES -->
+    <div id="modal-atualizacoes" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-4xl w-full space-y-5 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-slate-800 dark:text-white"><i class="fa-solid fa-bullhorn text-emerald-600 mr-2"></i> Histórico de Atualizações (Release Notes)</h3>
+                <button onclick="fecharModalAtualizacoes()" class="text-slate-500 hover:text-slate-700 font-bold text-xl">&times;</button>
+            </div>
+            
+            <div class="space-y-6 text-sm text-slate-600 dark:text-slate-300">
+                <!-- Versão 22 -->
+                <div class="bg-emerald-50 dark:bg-slate-900/60 p-4 rounded-xl border border-emerald-200 dark:border-emerald-900 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-emerald-700 dark:text-emerald-400 text-base">Versão 22 (Atual)</h4>
+                        <span class="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">Mais Recente</span>
+                    </div>
+                    <ul class="list-disc pl-5 space-y-1 text-xs">
+                        <li><strong>Baixar Ícone 512x512 PNG:</strong> Ferramenta integrada no cabeçalho para gerar e baixar instantaneamente o ícone oficial do aplicativo.</li>
+                        <li><strong>Manual Interativo por Abas:</strong> Guia de ajuda estruturado em abas temáticas para navegação fluida.</li>
+                        <li><strong>IA Integrada aos Lançamentos:</strong> Respostas precisas baseadas nos dados reais do mês selecionado.</li>
+                    </ul>
+                </div>
+
+                <!-- Versão 21 -->
+                <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border space-y-2">
+                    <h4 class="font-bold text-slate-800 dark:text-white text-base">Versão 21</h4>
+                    <ul class="list-disc pl-5 space-y-1 text-xs">
+                        <li>Exclusão de meses vazios liberada e melhorias na interpretação do chatbot.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t dark:border-slate-700">
+                <button onclick="fecharModalAtualizacoes()" class="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        const initialTransacoes = [
+            // Junho 2026
+            { id: 101, mes: "2026-06", data: "2026-06-10", descricao: "Arco", valor: 500.00, tipo: "despesa", status: "pago" },
+            { id: 102, mes: "2026-06", data: "2026-06-11", descricao: "Água e Força", valor: 166.05, tipo: "despesa", status: "pago" },
+            { id: 103, mes: "2026-06", data: "2026-06-09", descricao: "Cartão", valor: 1330.00, tipo: "despesa", status: "pago" },
+            { id: 104, mes: "2026-06", data: "2026-06-01", descricao: "Shopee", valor: 180.00, tipo: "despesa", status: "pago" },
+            { id: 105, mes: "2026-06", data: "2026-06-10", descricao: "Madalena", valor: 172.00, tipo: "despesa", status: "pago" },
+            { id: 106, mes: "2026-06", data: "2026-06-11", descricao: "Margius", valor: 137.24, tipo: "despesa", status: "pago" },
+            { id: 107, mes: "2026-06", data: "2026-06-06", descricao: "Manuel", valor: 500.00, tipo: "despesa", status: "pago" },
+            { id: 108, mes: "2026-06", data: "2026-06-10", descricao: "Carne", valor: 180.00, tipo: "despesa", status: "pago" },
+            { id: 109, mes: "2026-06", data: "2026-06-08", descricao: "Cheque", valor: 289.32, tipo: "despesa", status: "pago" },
+            { id: 110, mes: "2026-06", data: "2026-06-01", descricao: "Farmácia", valor: 290.00, tipo: "despesa", status: "pago" },
+            { id: 111, mes: "2026-06", data: "2026-06-01", descricao: "Prever", valor: 70.00, tipo: "despesa", status: "pago" },
+            { id: 112, mes: "2026-06", data: "2026-06-06", descricao: "Chicão", valor: 150.00, tipo: "despesa", status: "pago" },
+            { id: 113, mes: "2026-06", data: "2026-06-11", descricao: "IPTU", valor: 85.79, tipo: "despesa", status: "pago" },
+            { id: 114, mes: "2026-06", data: "2026-06-09", descricao: "Ração", valor: 179.00, tipo: "despesa", status: "pago" },
+            { id: 115, mes: "2026-06", data: "2026-06-11", descricao: "Internet", valor: 99.00, tipo: "despesa", status: "pago" },
+            { id: 116, mes: "2026-06", data: "2026-06-06", descricao: "Canil", valor: 236.00, tipo: "despesa", status: "pago" },
+            { id: 117, mes: "2026-06", data: "2026-06-10", descricao: "Bento", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 118, mes: "2026-06", data: "2026-06-01", descricao: "IPTV", valor: 30.00, tipo: "despesa", status: "pago" },
+
+            // Julho 2026
+            { id: 201, mes: "2026-07", data: "2026-07-01", descricao: "Pagamento Recebido", valor: 7054.95, tipo: "receita", status: "pago" },
+            { id: 202, mes: "2026-07", data: "2026-07-07", descricao: "DAS MEI", valor: 106.97, tipo: "despesa", status: "pago" },
+            { id: 203, mes: "2026-07", data: "2026-07-07", descricao: "Irmã Fabíola (Mesa)", valor: 500.00, tipo: "despesa", status: "pago" },
+            { id: 204, mes: "2026-07", data: "2026-07-07", descricao: "Irmão Yuri (Arco)", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 205, mes: "2026-07", data: "2026-07-07", descricao: "Chicão", valor: 150.00, tipo: "despesa", status: "pago" },
+            { id: 206, mes: "2026-07", data: "2026-07-07", descricao: "Neto", valor: 600.00, tipo: "despesa", status: "pago" },
+            { id: 207, mes: "2026-07", data: "2026-07-08", descricao: "Manuel (Pedreiro)", valor: 400.00, tipo: "despesa", status: "pago" },
+            { id: 208, mes: "2026-07", data: "2026-07-07", descricao: "Água e Força (Mãe)", valor: 250.00, tipo: "despesa", status: "pago" },
+            { id: 209, mes: "2026-07", data: "2026-07-07", descricao: "Cartão (Mãe)", valor: 1470.00, tipo: "despesa", status: "pago" },
+            { id: 210, mes: "2026-07", data: "2026-07-07", descricao: "Madalena (Amor)", valor: 172.00, tipo: "despesa", status: "pago" },
+            { id: 211, mes: "2026-07", data: "2026-07-07", descricao: "Carne", valor: 180.00, tipo: "despesa", status: "pago" },
+            { id: 212, mes: "2026-07", data: "2026-07-07", descricao: "Margius", valor: 137.24, tipo: "despesa", status: "pago" },
+            { id: 213, mes: "2026-07", data: "2026-07-08", descricao: "Farmácia", valor: 142.05, tipo: "despesa", status: "pago" },
+            { id: 214, mes: "2026-07", data: "2026-07-07", descricao: "Prever (Amor)", valor: 70.00, tipo: "despesa", status: "pago" },
+            { id: 215, mes: "2026-07", data: "2026-07-07", descricao: "IPTU", valor: 85.79, tipo: "despesa", status: "pago" },
+            { id: 216, mes: "2026-07", data: "2026-07-08", descricao: "Bento", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 217, mes: "2026-07", data: "2026-07-07", descricao: "Internet", valor: 99.00, tipo: "despesa", status: "pago" },
+            { id: 218, mes: "2026-07", data: "2026-07-07", descricao: "Ração", valor: 179.00, tipo: "despesa", status: "pago" },
+            { id: 219, mes: "2026-07", data: "2026-07-09", descricao: "IPTV", valor: 30.00, tipo: "despesa", status: "pago" },
+            { id: 220, mes: "2026-07", data: "2026-07-07", descricao: "Shopee (Amor)", valor: 189.00, tipo: "despesa", status: "pago" },
+            { id: 221, mes: "2026-07", data: "2026-07-16", descricao: "Reforma / Construção", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 222, mes: "2026-07", data: "2026-07-07", descricao: "Cabelo Matheus", valor: 35.00, tipo: "despesa", status: "pago" },
+            { id: 223, mes: "2026-07", data: "2026-07-07", descricao: "Jeitto (Empréstimo)", valor: 187.15, tipo: "despesa", status: "pago" },
+
+            // Agosto 2026
+            { id: 301, mes: "2026-08", data: "2026-08-06", descricao: "Pagamento Recebido (Dinheiro)", valor: 7016.85, tipo: "receita", status: "pago" },
+            { id: 302, mes: "2026-08", data: "2026-08-01", descricao: "Seguro de Vida Bradesco", valor: 44.95, tipo: "despesa", status: "pago" },
+            { id: 303, mes: "2026-08", data: "2026-08-07", descricao: "Irmã Fabíola", valor: 500.00, tipo: "despesa", status: "pago" },
+            { id: 304, mes: "2026-08", data: "2026-08-07", descricao: "Irmão Yuri", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 305, mes: "2026-08", data: "2026-08-08", descricao: "Chicão", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 306, mes: "2026-08", data: "2026-08-07", descricao: "Neto", valor: 400.00, tipo: "despesa", status: "pago" },
+            { id: 307, mes: "2026-08", data: "2026-08-07", descricao: "Manuel (Quitado)", valor: 500.00, tipo: "despesa", status: "pago" },
+            { id: 308, mes: "2026-08", data: "2026-08-09", descricao: "Água e Força", valor: 272.30, tipo: "despesa", status: "pago" },
+            { id: 309, mes: "2026-08", data: "2026-08-09", descricao: "Cartão", valor: 2424.26, tipo: "despesa", status: "pago" },
+            { id: 310, mes: "2026-08", data: "2026-08-09", descricao: "Madalena", valor: 172.00, tipo: "despesa", status: "pago" },
+            { id: 311, mes: "2026-08", data: "2026-08-09", descricao: "Carne", valor: 152.00, tipo: "despesa", status: "pago" },
+            { id: 312, mes: "2026-08", data: "2026-08-10", descricao: "Margius", valor: 137.24, tipo: "despesa", status: "pago" },
+            { id: 313, mes: "2026-08", data: "2026-08-10", descricao: "Farmácia", valor: 142.06, tipo: "despesa", status: "pago" },
+            { id: 314, mes: "2026-08", data: "2026-08-09", descricao: "Prever", valor: 70.00, tipo: "despesa", status: "pago" },
+            { id: 315, mes: "2026-08", data: "2026-08-09", descricao: "IPTU", valor: 85.79, tipo: "despesa", status: "pago" },
+            { id: 316, mes: "2026-08", data: "2026-08-01", descricao: "Bento", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 317, mes: "2026-08", data: "2026-08-09", descricao: "Internet", valor: 99.00, tipo: "despesa", status: "pago" },
+            { id: 318, mes: "2026-08", data: "2026-08-08", descricao: "Ração", valor: 179.00, tipo: "despesa", status: "pago" },
+            { id: 319, mes: "2026-08", data: "2026-08-09", descricao: "IPTV", valor: 50.00, tipo: "despesa", status: "pago" },
+            { id: 320, mes: "2026-08", data: "2026-08-09", descricao: "Shopee", valor: 180.00, tipo: "despesa", status: "pago" },
+            { id: 321, mes: "2026-08", data: "2026-08-01", descricao: "Cabelo", valor: 50.00, tipo: "despesa", status: "pago" },
+            { id: 322, mes: "2026-08", data: "2026-08-01", descricao: "Reforma / Construção", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 323, mes: "2026-08", data: "2026-08-09", descricao: "Pão de Queijo", valor: 60.00, tipo: "despesa", status: "pago" },
+            { id: 324, mes: "2026-08", data: "2026-08-01", descricao: "DAS MEI", valor: 107.05, tipo: "despesa", status: "pago" },
+
+            // Setembro 2026
+            { id: 401, mes: "2026-09", data: "2026-09-01", descricao: "Pagamento Recebido", valor: 8166.43, tipo: "receita", status: "pago" },
+            { id: 402, mes: "2026-09", data: "2026-09-07", descricao: "Viagem p/ Mogi Guaçu", valor: 335.40, tipo: "despesa", status: "pago" },
+            { id: 403, mes: "2026-09", data: "2026-09-09", descricao: "Seguro de Vida Bradesco", valor: 44.95, tipo: "despesa", status: "pago" },
+            { id: 404, mes: "2026-09", data: "2026-09-07", descricao: "Irmã Fabíola (Mesa)", valor: 500.00, tipo: "despesa", status: "pago" },
+            { id: 405, mes: "2026-09", data: "2026-09-08", descricao: "Irmão Yuri", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 406, mes: "2026-09", data: "2026-09-08", descricao: "Chicão", valor: 250.00, tipo: "despesa", status: "pago" },
+            { id: 407, mes: "2026-09", data: "2026-09-04", descricao: "Neto", valor: 400.00, tipo: "despesa", status: "pago" },
+            { id: 408, mes: "2026-09", data: "2026-09-10", descricao: "Água e Força", valor: 291.00, tipo: "despesa", status: "pago" },
+            { id: 409, mes: "2026-09", data: "2026-09-08", descricao: "Cartão", valor: 2450.00, tipo: "despesa", status: "pago" },
+            { id: 410, mes: "2026-09", data: "2026-09-09", descricao: "Madalena (Parcela 01/02)", valor: 172.00, tipo: "despesa", status: "pago" },
+            { id: 411, mes: "2026-09", data: "2026-09-09", descricao: "Carne", valor: 214.00, tipo: "despesa", status: "pago" },
+            { id: 412, mes: "2026-09", data: "2026-09-08", descricao: "Margius (Última Parcela)", valor: 137.24, tipo: "despesa", status: "pago" },
+            { id: 413, mes: "2026-09", data: "2026-09-08", descricao: "Farmácia", valor: 142.05, tipo: "despesa", status: "pago" },
+            { id: 414, mes: "2026-09", data: "2026-09-09", descricao: "Prever", valor: 70.00, tipo: "despesa", status: "pago" },
+            { id: 415, mes: "2026-09", data: "2026-09-09", descricao: "IPTU (Parcela 05/08)", valor: 85.79, tipo: "despesa", status: "pago" },
+            { id: 416, mes: "2026-09", data: "2026-09-09", descricao: "Internet", valor: 104.99, tipo: "despesa", status: "pago" },
+            { id: 417, mes: "2026-09", data: "2026-09-08", descricao: "IPTV", valor: 50.00, tipo: "despesa", status: "pago" },
+            { id: 418, mes: "2026-09", data: "2026-09-08", descricao: "Shopee", valor: 223.00, tipo: "despesa", status: "pago" },
+            { id: 419, mes: "2026-09", data: "2026-09-09", descricao: "DAS", valor: 107.07, tipo: "despesa", status: "pago" },
+            { id: 420, mes: "2026-09", data: "2026-09-07", descricao: "Matheus (Cuidar da Bella)", valor: 100.00, tipo: "despesa", status: "pago" },
+            { id: 421, mes: "2026-09", data: "2026-09-07", descricao: "Perfume", valor: 109.00, tipo: "despesa", status: "pago" },
+            { id: 422, mes: "2026-09", data: "2026-09-01", descricao: "Chico Mecânico", valor: 300.00, tipo: "despesa", status: "pago" },
+            { id: 423, mes: "2026-09", data: "2026-09-10", descricao: "Devolução Zion", valor: 300.54, tipo: "despesa", status: "pago" },
+            { id: 424, mes: "2026-09", data: "2026-09-11", descricao: "Cello Ajuste", valor: 170.00, tipo: "despesa", status: "pago" },
+            { id: 425, mes: "2026-09", data: "2026-09-11", descricao: "Combustível", valor: 100.00, tipo: "despesa", status: "pago" },
+            { id: 426, mes: "2026-09", data: "2026-09-11", descricao: "Pedágio Botucatu", valor: 16.00, tipo: "despesa", status: "pago" },
+            { id: 427, mes: "2026-09", data: "2026-09-10", descricao: "Havan (Parcela 01/05)", valor: 125.00, tipo: "despesa", status: "pago" },
+
+            // Outubro 2026
+            { id: 501, mes: "2026-10", data: "2026-10-09", descricao: "Irmã Fabíola (Mesa)", valor: 500.00, tipo: "despesa", status: "pago" },
+            { id: 502, mes: "2026-10", data: "2026-10-09", descricao: "Irmão Yuri (Arco)", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 503, mes: "2026-10", data: "2026-10-10", descricao: "Seguro de Vida", valor: 44.95, tipo: "despesa", status: "pago" },
+            { id: 504, mes: "2026-10", data: "2026-10-08", descricao: "Chicão", valor: 300.00, tipo: "despesa", status: "pago" },
+            { id: 505, mes: "2026-10", data: "2026-10-10", descricao: "Água (Mãe)", valor: 270.00, tipo: "despesa", status: "pago" },
+            { id: 506, mes: "2026-10", data: "2026-10-10", descricao: "Cartão (Mãe)", valor: 34.00, tipo: "despesa", status: "pago" },
+            { id: 507, mes: "2026-10", data: "2026-10-10", descricao: "Madalena (Parcela 02/02 Amor)", valor: 172.00, tipo: "despesa", status: "pago" },
+            { id: 508, mes: "2026-10", data: "2026-10-10", descricao: "Carne (Amor)", valor: 168.00, tipo: "despesa", status: "pago" },
+            { id: 509, mes: "2026-10", data: "2026-10-08", descricao: "Farmácia", valor: 142.05, tipo: "despesa", status: "pago" },
+            { id: 510, mes: "2026-10", data: "2026-10-10", descricao: "Prever (Amor)", valor: 70.00, tipo: "despesa", status: "pago" },
+            { id: 511, mes: "2026-10", data: "2026-10-10", descricao: "IPTU (Parcela 06/08)", valor: 85.79, tipo: "despesa", status: "pago" },
+            { id: 512, mes: "2026-10", data: "2026-10-10", descricao: "Internet", valor: 104.99, tipo: "despesa", status: "pago" },
+            { id: 513, mes: "2026-10", data: "2026-10-01", descricao: "Ração", valor: 189.90, tipo: "despesa", status: "pago" },
+            { id: 514, mes: "2026-10", data: "2026-10-10", descricao: "IPTV", valor: 50.00, tipo: "despesa", status: "pago" },
+            { id: 515, mes: "2026-10", data: "2026-10-10", descricao: "Shopee (Amor)", valor: 200.00, tipo: "despesa", status: "pago" },
+            { id: 516, mes: "2026-10", data: "2026-10-10", descricao: "DAS MEI (Ref. Maio/26 Mãe)", valor: 107.04, tipo: "despesa", status: "pago" },
+            { id: 517, mes: "2026-10", data: "2026-10-10", descricao: "Havan (Parcela 02/05)", valor: 125.00, tipo: "despesa", status: "pago" },
+            { id: 518, mes: "2026-10", data: "2026-10-07", descricao: "Mecânico", valor: 420.00, tipo: "despesa", status: "pago" },
+            { id: 519, mes: "2026-10", data: "2026-10-10", descricao: "Havan (Mãe)", valor: 70.00, tipo: "despesa", status: "pago" },
+            { id: 520, mes: "2026-10", data: "2026-10-01", descricao: "Chinelo (Amor Parcela 01/03)", valor: 36.00, tipo: "despesa", status: "pago" },
+            { id: 521, mes: "2026-10", data: "2026-10-03", descricao: "Fogão a Gás", valor: 225.00, tipo: "despesa", status: "pago" },
+            { id: 522, mes: "2026-10", data: "2026-10-08", descricao: "Neto", valor: 400.00, tipo: "despesa", status: "pago" },
+
+            // Novembro 2026 (A Pagar)
+            { id: 601, mes: "2026-11", data: "2026-11-01", descricao: "Irmã Fabíola (Mesa - Acaba esse mês)", valor: 450.00, tipo: "despesa", status: "pendente" },
+            { id: 602, mes: "2026-11", data: "2026-11-01", descricao: "Irmão Yuri (Arco - Acaba esse mês)", valor: 100.00, tipo: "despesa", status: "pendente" },
+            { id: 603, mes: "2026-11", data: "2026-11-01", descricao: "Seguro de Vida", valor: 44.95, tipo: "despesa", status: "pendente" },
+            { id: 604, mes: "2026-11", data: "2026-11-01", descricao: "Prever", valor: 70.00, tipo: "despesa", status: "pendente" },
+            { id: 605, mes: "2026-11", data: "2026-11-01", descricao: "IPTU (Parcela 07/08)", valor: 85.79, tipo: "despesa", status: "pendente" },
+            { id: 606, mes: "2026-11", data: "2026-11-01", descricao: "Internet", valor: 104.99, tipo: "despesa", status: "pendente" },
+            { id: 607, mes: "2026-11", data: "2026-11-01", descricao: "Ração", valor: 189.90, tipo: "despesa", status: "pendente" },
+            { id: 608, mes: "2026-11", data: "2026-11-01", descricao: "IPTV", valor: 50.00, tipo: "despesa", status: "pendente" },
+            { id: 609, mes: "2026-11", data: "2026-11-01", descricao: "Havan (Parcela 03/05)", valor: 125.00, tipo: "despesa", status: "pendente" },
+            { id: 610, mes: "2026-11", data: "2026-11-01", descricao: "Havan", valor: 70.00, tipo: "despesa", status: "pendente" },
+            { id: 611, mes: "2026-11", data: "2026-11-01", descricao: "Chinelo (Parcela 02/03)", valor: 36.00, tipo: "despesa", status: "pendente" }
+        ];
+
+        let state = {
+            currentUser: null,
+            mesAtivo: "2026-10",
+            mesesCustomizados: JSON.parse(localStorage.getItem('cf_v22_meses')) || ["2026-06", "2026-07", "2026-08", "2026-09", "2026-10", "2026-11"],
+            perfis: JSON.parse(localStorage.getItem('cf_v22_perfis')) || [
+                { 
+                    id: 1, 
+                    nome: 'Administrador Master', 
+                    desc: 'Acesso total e irrestrito', 
+                    permissoes: { criar: true, editar: true, visualizar: true }, 
+                    telas: { dashboard: true, transacoes: true, relatorios: true, perfis: true, usuarios: true, logs: true } 
+                },
+                { 
+                    id: 2, 
+                    nome: 'Visualizador / Restrito', 
+                    desc: 'Apenas visualização sem permissão de edição', 
+                    permissoes: { criar: false, editar: false, visualizar: true }, 
+                    telas: { dashboard: true, transacoes: true, relatorios: true, perfis: false, usuarios: false, logs: false } 
+                }
+            ],
+            usuarios: JSON.parse(localStorage.getItem('cf_v22_usuarios')) || [
+                { id: 1, nome: 'Administrador Master', login: 'admin', email: 'admin@controle.com', senha: '123', perfilId: 1, theme: 'light' },
+                { id: 2, nome: 'Marco Aurélio Rigo', login: 'marco.rigo', email: 'marcoaurelio_rigo@hotmail.com', senha: '123456', perfilId: 1, theme: 'light' }
+            ],
+            transacoes: JSON.parse(localStorage.getItem('cf_v22_transacoes')) || initialTransacoes,
+            logs: JSON.parse(localStorage.getItem('cf_v22_logs')) || [],
+            locks: JSON.parse(localStorage.getItem('cf_v22_locks')) || {}
+        };
+
+        let chartBalancoInstance = null;
+        let chartCategoriasInstance = null;
+        let recoveryUserEmailTemp = null;
+        let globalRecognition = null;
+
+        function saveState() {
+            localStorage.setItem('cf_v22_meses', JSON.stringify(state.mesesCustomizados));
+            localStorage.setItem('cf_v22_perfis', JSON.stringify(state.perfis));
+            localStorage.setItem('cf_v22_usuarios', JSON.stringify(state.usuarios));
+            localStorage.setItem('cf_v22_transacoes', JSON.stringify(state.transacoes));
+            localStorage.setItem('cf_v22_logs', JSON.stringify(state.logs));
+            localStorage.setItem('cf_v22_locks', JSON.stringify(state.locks));
+            render();
+        }
+
+        window.addEventListener('storage', () => {
+            state.mesesCustomizados = JSON.parse(localStorage.getItem('cf_v22_meses')) || state.mesesCustomizados;
+            state.perfis = JSON.parse(localStorage.getItem('cf_v22_perfis')) || state.perfis;
+            state.usuarios = JSON.parse(localStorage.getItem('cf_v22_usuarios')) || state.usuarios;
+            state.transacoes = JSON.parse(localStorage.getItem('cf_v22_transacoes')) || state.transacoes;
+            state.logs = JSON.parse(localStorage.getItem('cf_v22_logs')) || state.logs;
+            state.locks = JSON.parse(localStorage.getItem('cf_v22_locks')) || state.locks;
+            render();
+        });
+
+        // --- GERADOR DE ÍCONE 512x512 PNG (Item 3) ---
+        function baixarIcone512() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            // Fundo gradiente arredondado
+            const grad = ctx.createLinearGradient(0, 0, 512, 512);
+            grad.addColorStop(0, '#4f46e5'); // indigo-600
+            grad.addColorStop(1, '#312e81'); // indigo-900
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Símbolo de Carteira Executiva / Finanças
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(80, 160, 352, 220, 32);
+            ctx.fill();
+            
+            // Aba da Carteira
+            ctx.fillStyle = '#818cf8';
+            ctx.beginPath();
+            ctx.roundRect(280, 210, 170, 100, 20);
+            ctx.fill();
+            
+            // Botão / Fechamento dourado
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(365, 260, 18, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Linhas de Gráfico Financeiro
+            ctx.strokeStyle = '#4f46e5';
+            ctx.lineWidth = 14;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(130, 230);
+            ctx.lineTo(190, 230);
+            ctx.moveTo(130, 290);
+            ctx.lineTo(230, 290);
+            ctx.stroke();
+
+            // Download automático
+            const link = document.createElement('a');
+            link.download = 'icone_controle_financeiro_512x512.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- MANUAL INTERATIVO (Item 2) ---
+        function abrirModalManual() { 
+            document.getElementById('modal-manual').classList.remove('hidden'); 
+            switchManualTab('passo1');
+        }
+        function fecharModalManual() { document.getElementById('modal-manual').classList.add('hidden'); }
+
+        function switchManualTab(tab) {
+            ['passo1', 'passo2', 'passo3', 'passo4'].forEach(t => {
+                document.getElementById('manual-content-' + t).classList.add('hidden');
+                const btn = document.getElementById('btn-manual-' + t);
+                btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors";
+            });
+            document.getElementById('manual-content-' + tab).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-manual-' + tab);
+            activeBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition-colors";
+        }
+
+        function abrirModalAtualizacoes() { document.getElementById('modal-atualizacoes').classList.remove('hidden'); }
+        function fecharModalAtualizacoes() { document.getElementById('modal-atualizacoes').classList.add('hidden'); }
+
+        // --- REGISTRO DE LOGS ---
+        function registrarLog(acao, detalhes) {
+            const userLogin = state.currentUser ? state.currentUser.login : 'sistema';
+            const dataHora = new Date().toLocaleString('pt-BR');
+            state.logs.unshift({ id: Date.now(), dataHora, usuario: userLogin, acao, detalhes });
+            if (state.logs.length > 100) state.logs.pop();
+            localStorage.setItem('cf_v22_logs', JSON.stringify(state.logs));
+        }
+
+        function limparLogs() {
+            if (!confirm('Deseja limpar todos os registros de log?')) return;
+            state.logs = [];
+            saveState();
+        }
+
+        // --- AUTENTICAÇÃO ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const loginInput = document.getElementById('login-usuario').value.trim();
+            const senhaInput = document.getElementById('login-senha').value;
+
+            const user = state.usuarios.find(u => u.login === loginInput && u.senha === senhaInput);
+            if (user) {
+                state.currentUser = user;
+                applyUserTheme(user.theme || 'light');
+                document.getElementById('screen-login').classList.add('hidden');
+                document.getElementById('screen-app').classList.remove('hidden');
+
+                const perfilObj = state.perfis.find(p => p.id == user.perfilId);
+                document.getElementById('logged-user-name').innerText = user.nome;
+                document.getElementById('logged-user-perfil').innerText = perfilObj ? perfilObj.nome : 'Sem Perfil';
+                document.getElementById('footer-username').innerText = user.nome;
+                document.getElementById('footer-userperfil').innerText = perfilObj ? perfilObj.nome : '-';
+
+                registrarLog('LOGIN', `Usuário ${user.login} acessou o sistema.`);
+                renderNavMenu(perfilObj);
+                render();
+            } else {
+                alert('Usuário ou senha inválidos!');
+            }
+        }
+
+        function handleLogout() {
+            if (state.currentUser) {
+                registrarLog('LOGOUT', `Usuário ${state.currentUser.login} saiu do sistema.`);
+            }
+            state.currentUser = null;
+            document.getElementById('screen-app').classList.add('hidden');
+            document.getElementById('screen-login').classList.remove('hidden');
+            document.getElementById('login-usuario').value = '';
+            document.getElementById('login-senha').value = '';
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // --- RECUPERAÇÃO DE SENHA INTELIGENTE ---
+        function abrirModalEsqueceuSenha() {
+            document.getElementById('forgot-step-1').classList.remove('hidden');
+            document.getElementById('forgot-step-2').classList.add('hidden');
+            document.getElementById('forgot-login').value = '';
+            document.getElementById('forgot-email').value = '';
+            document.getElementById('modal-forgot').classList.remove('hidden');
+        }
+
+        function fecharModalEsqueceuSenha() {
+            document.getElementById('modal-forgot').classList.add('hidden');
+            recoveryUserEmailTemp = null;
+        }
+
+        function verificarEmailRecuperacao() {
+            const login = document.getElementById('forgot-login').value.trim();
+            const email = document.getElementById('forgot-email').value.trim();
+
+            if (!login || !email) {
+                alert('Informe o login e o e-mail cadastrado.');
+                return;
+            }
+
+            const user = state.usuarios.find(u => u.login === login && u.email.toLowerCase() === email.toLowerCase());
+            if (user) {
+                recoveryUserEmailTemp = user.email;
+                document.getElementById('forgot-step-1').classList.add('hidden');
+                document.getElementById('forgot-step-2').classList.remove('hidden');
+            } else {
+                alert('❌ Erro: Login ou e-mail não confere com os cadastros do sistema.');
+            }
+        }
+
+        function salvarNovaSenhaRecuperada() {
+            const novaSenha = document.getElementById('forgot-new-pass').value;
+            const confirmaSenha = document.getElementById('forgot-confirm-pass').value;
+
+            if (!novaSenha || novaSenha.length < 3) {
+                alert('A senha deve ter pelo menos 3 caracteres.');
+                return;
+            }
+            if (novaSenha !== confirmaSenha) {
+                alert('As senhas não conferem.');
+                return;
+            }
+
+            const user = state.usuarios.find(u => u.email.toLowerCase() === recoveryUserEmailTemp.toLowerCase());
+            if (user) {
+                user.senha = novaSenha;
+                registrarLog('RECUPERAÇÃO DE SENHA', `Senha redefinida com sucesso para o usuário ${user.login}.`);
+                saveState();
+                alert('✅ Senha redefinida com sucesso! Faça login com sua nova senha.');
+                fecharModalEsqueceuSenha();
+            } else {
+                alert('Erro ao atualizar senha.');
+            }
+        }
+
+        // --- TEMA ---
+        function toggleTheme() {
+            if (!state.currentUser) return;
+            const currentTheme = state.currentUser.theme === 'dark' ? 'light' : 'dark';
+            state.currentUser.theme = currentTheme;
+            const idx = state.usuarios.findIndex(u => u.id === state.currentUser.id);
+            if (idx !== -1) state.usuarios[idx].theme = currentTheme;
+            saveState();
+            applyUserTheme(currentTheme);
+        }
+
+        function applyUserTheme(theme) {
+            const htmlRoot = document.getElementById('html-root');
+            const themeIcon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                htmlRoot.classList.add('dark');
+                if (themeIcon) { themeIcon.classList.remove('fa-moon'); themeIcon.classList.add('fa-sun'); }
+            } else {
+                htmlRoot.classList.remove('dark');
+                if (themeIcon) { themeIcon.classList.remove('fa-sun'); themeIcon.classList.add('fa-moon'); }
+            }
+        }
+
+        // --- MENU ---
+        function renderNavMenu(perfil) {
+            const nav = document.getElementById('sidebar-nav');
+            nav.innerHTML = '';
+            const telas = perfil && perfil.telas ? perfil.telas : { dashboard: true, transacoes: true, relatorios: true, perfis: true, usuarios: true, logs: true };
+
+            const menuItems = [
+                { id: 'dashboard', label: 'Dashboard & IA', icon: 'fa-chart-pie', perm: telas.dashboard },
+                { id: 'transacoes', label: 'Lançamentos', icon: 'fa-right-left', perm: telas.transacoes },
+                { id: 'relatorios', label: 'Relatórios', icon: 'fa-file-excel', perm: telas.relatorios },
+                { id: 'perfis', label: 'Perfis de Acesso', icon: 'fa-id-card', perm: telas.perfis },
+                { id: 'usuarios', label: 'Usuários', icon: 'fa-users', perm: telas.usuarios },
+                { id: 'logs', label: 'Logs do Sistema', icon: 'fa-clipboard-list', perm: telas.logs }
+            ];
+
+            let firstTab = null;
+            menuItems.forEach(item => {
+                if (item.perm) {
+                    if (!firstTab) firstTab = item.id;
+                    nav.innerHTML += `
+                        <button onclick="switchTab('${item.id}')" id="btn-${item.id}" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                            <i class="fa-solid ${item.icon} w-5"></i>
+                            <span>${item.label}</span>
+                        </button>
+                    `;
+                }
+            });
+            if (firstTab) switchTab(firstTab);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'bg-indigo-50', 'dark:bg-slate-700');
+                btn.classList.add('text-slate-600', 'dark:text-slate-300');
+            });
+            const btnActive = document.getElementById('btn-' + tabId);
+            if (btnActive) {
+                btnActive.classList.remove('text-slate-600', 'dark:text-slate-300');
+                btnActive.classList.add('text-indigo-600', 'dark:text-indigo-400', 'bg-indigo-50', 'dark:bg-slate-700');
+            }
+            if (tabId === 'dashboard') atualizarGraficos();
+        }
+
+        function getMesesDisponiveis() {
+            const mesesSet = new Set(state.mesesCustomizados || []);
+            state.transacoes.forEach(t => {
+                const m = t.mes || (t.data ? t.data.substring(0,7) : null);
+                if (m) mesesSet.add(m);
+            });
+            mesesSet.add(state.mesAtivo);
+            return Array.from(mesesSet).sort().reverse();
+        }
+
+        function mudarMesAtivo() {
+            state.mesAtivo = document.getElementById('select-mes-ativo').value;
+            render();
+        }
+
+        function abrirModalNovoMes() { document.getElementById('modal-novo-mes').classList.remove('hidden'); }
+        function fecharModalNovoMes() { document.getElementById('modal-novo-mes').classList.add('hidden'); }
+
+        function criarNovoMes() {
+            const val = document.getElementById('input-novo-mes-val').value;
+            if (!val) { alert('Selecione um mês.'); return; }
+            if (!state.mesesCustomizados.includes(val)) {
+                state.mesesCustomizados.push(val);
+            }
+            state.mesAtivo = val;
+            registrarLog('CRIAR MÊS', `Mês ${val} aberto.`);
+            fecharModalNovoMes();
+            saveState();
+        }
+
+        function abrirModalReplicar() {
+            document.getElementById('modal-mes-destino-txt').innerText = state.mesAtivo;
+            const selectOrigem = document.getElementById('select-mes-origem-replicar');
+            selectOrigem.innerHTML = '';
+            getMesesDisponiveis().forEach(m => {
+                if (m !== state.mesAtivo) {
+                    selectOrigem.innerHTML += `<option value="${m}">${m}</option>`;
+                }
+            });
+            if (!selectOrigem.innerHTML) {
+                alert('Não há outros meses disponíveis para replicação.');
+                return;
+            }
+            document.getElementById('modal-replicar').classList.remove('hidden');
+        }
+
+        function fecharModalReplicar() {
+            document.getElementById('modal-replicar').classList.add('hidden');
+        }
+
+        function confirmarReplicacaoMes() {
+            const perfilObj = state.currentUser ? state.perfis.find(p => p.id == state.currentUser.perfilId) : null;
+            if (perfilObj && perfilObj.permissoes && !perfilObj.permissoes.criar) {
+                alert('Acesso negado: Seu perfil não possui permissão para criar ou replicar lançamentos.');
+                return;
+            }
+
+            const mesOrigem = document.getElementById('select-mes-origem-replicar').value;
+            if (!mesOrigem) return;
+
+            if (!confirm(`Deseja copiar todos os lançamentos de ${mesOrigem} para ${state.mesAtivo}?`)) return;
+
+            const itens = state.transacoes.filter(t => (t.mes || t.data.substring(0,7)) === mesOrigem);
+            itens.forEach(item => {
+                state.transacoes.push({
+                    id: Date.now() + Math.random(),
+                    mes: state.mesAtivo,
+                    data: state.mesAtivo + '-01',
+                    descricao: item.descricao,
+                    valor: item.valor,
+                    tipo: item.tipo,
+                    status: 'pendente'
+                });
+            });
+            registrarLog('REPLICAR MÊS', `Replicados ${itens.length} itens de ${mesOrigem} para ${state.mesAtivo}.`);
+            saveState();
+            fecharModalReplicar();
+            alert(`Lançamentos replicados com sucesso de ${mesOrigem} para ${state.mesAtivo}!`);
+        }
+
+        function deletarMesAtual() {
+            const transMes = state.transacoes.filter(t => (t.mes || t.data.substring(0,7)) === state.mesAtivo);
+            if (transMes.length > 0) {
+                alert('Atenção: Não é possível excluir este mês pois existem lançamentos cadastrados. Remova os lançamentos primeiro se desejar excluir o mês.');
+                return;
+            }
+            if (!confirm(`Deseja excluir o mês ${state.mesAtivo}?`)) return;
+
+            state.mesesCustomizados = state.mesesCustomizados.filter(m => m !== state.mesAtivo);
+            const disponiveis = getMesesDisponiveis().filter(m => m !== state.mesAtivo);
+            state.mesAtivo = disponiveis.length > 0 ? disponiveis[0] : '2026-10';
+            
+            registrarLog('EXCLUIR MÊS', `Mês ${state.mesAtivo} excluído.`);
+            saveState();
+        }
+
+        // --- TRANSAÇÕES ---
+        function saveTransacao(e) {
+            e.preventDefault();
+            const editId = document.getElementById('trans-edit-id').value;
+            
+            const perfilObj = state.currentUser ? state.perfis.find(p => p.id == state.currentUser.perfilId) : null;
+            if (editId) {
+                if (perfilObj && perfilObj.permissoes && !perfilObj.permissoes.editar) {
+                    alert('Acesso negado: Seu perfil não possui permissão para editar lançamentos.');
+                    return;
+                }
+                delete state.locks['trans_' + editId];
+            } else {
+                if (perfilObj && perfilObj.permissoes && !perfilObj.permissoes.criar) {
+                    alert('Acesso negado: Seu perfil não possui permissão para criar novos lançamentos.');
+                    return;
+                }
+            }
+
+            const descricao = document.getElementById('trans-desc').value.trim();
+            const valor = parseFloat(document.getElementById('trans-valor').value);
+            const data = document.getElementById('trans-data').value;
+            const tipo = document.getElementById('trans-tipo').value;
+            const status = document.getElementById('trans-status').value;
+            const mes = data ? data.substring(0, 7) : state.mesAtivo;
+
+            if (isNaN(valor) || valor <= 0) {
+                alert('Informe um valor válido maior que zero.');
+                return;
+            }
+
+            if (!state.mesesCustomizados.includes(mes)) {
+                state.mesesCustomizados.push(mes);
+            }
+
+            if (editId) {
+                const idx = state.transacoes.findIndex(t => t.id == editId);
+                if (idx !== -1) {
+                    state.transacoes[idx] = { id: Number(editId), mes, data, descricao, valor, tipo, status };
+                    registrarLog('EDITAR LANÇAMENTO', `Lançamento #${editId} (${descricao}) atualizado.`);
+                }
+                cancelarEdicaoTransacao();
+            } else {
+                const novoId = Date.now();
+                state.transacoes.push({ id: novoId, mes, data, descricao, valor, tipo, status });
+                registrarLog('CRIAR LANÇAMENTO', `Novo lançamento (${descricao} - R$ ${valor.toFixed(2)}) criado.`);
+                document.getElementById('form-transacao').reset();
+            }
+            saveState();
+        }
+
+        function editarTransacao(id) {
+            const perfilObj = state.currentUser ? state.perfis.find(p => p.id == state.currentUser.perfilId) : null;
+            if (perfilObj && perfilObj.permissoes && !perfilObj.permissoes.editar) {
+                alert('Acesso negado: Seu perfil não possui permissão para editar ou alterar lançamentos.');
+                return;
+            }
+
+            const lockKey = 'trans_' + id;
+            if (state.locks[lockKey] && state.locks[lockKey] !== (state.currentUser ? state.currentUser.login : '')) {
+                alert(`⚠️ Concorrência Detectada: Este registro está sendo editado neste momento pelo usuário [${state.locks[lockKey]}].`);
+                return;
+            }
+
+            state.locks[lockKey] = state.currentUser ? state.currentUser.login : 'admin';
+            localStorage.setItem('cf_v22_locks', JSON.stringify(state.locks));
+
+            const t = state.transacoes.find(item => item.id == id);
+            if (!t) return;
+
+            document.getElementById('trans-edit-id').value = t.id;
+            document.getElementById('trans-desc').value = t.descricao;
+            document.getElementById('trans-valor').value = t.valor;
+            document.getElementById('trans-data').value = t.data || (t.mes + '-01');
+            document.getElementById('trans-tipo').value = t.tipo;
+            document.getElementById('trans-status').value = t.status || 'pago';
+
+            document.getElementById('form-trans-title').innerText = 'Editar Lançamento (Bloqueado p/ Edição Exclusiva)';
+            document.getElementById('btn-salvar-trans').innerText = 'Atualizar';
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+
+            document.getElementById('form-transacao').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelarEdicaoTransacao() {
+            const editId = document.getElementById('trans-edit-id').value;
+            if (editId) {
+                delete state.locks['trans_' + editId];
+                localStorage.setItem('cf_v22_locks', JSON.stringify(state.locks));
+            }
+            document.getElementById('trans-edit-id').value = '';
+            document.getElementById('form-transacao').reset();
+            document.getElementById('form-trans-title').innerText = 'Adicionar Lançamento';
+            document.getElementById('btn-salvar-trans').innerText = 'Salvar';
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+        }
+
+        function deleteTransacao(id) {
+            const perfilObj = state.currentUser ? state.perfis.find(p => p.id == state.currentUser.perfilId) : null;
+            if (perfilObj && perfilObj.permissoes && !perfilObj.permissoes.editar) {
+                alert('Acesso negado: Seu perfil não possui permissão para excluir lançamentos.');
+                return;
+            }
+
+            if (!confirm('Deseja excluir este lançamento?')) return;
+            state.transacoes = state.transacoes.filter(t => t.id !== id);
+            delete state.locks['trans_' + id];
+            registrarLog('EXCLUIR LANÇAMENTO', `Lançamento #${id} excluído.`);
+            saveState();
+        }
+
+        // --- PERFIS & USUÁRIOS ---
+        function savePerfil(e) {
+            e.preventDefault();
+            const editId = document.getElementById('perfil-edit-id').value;
+            const nome = document.getElementById('perfil-nome').value.trim();
+            const desc = document.getElementById('perfil-desc').value.trim();
+            const permissoes = {
+                criar: document.getElementById('perm-criar').checked,
+                editar: document.getElementById('perm-editar').checked,
+                visualizar: document.getElementById('perm-visualizar').checked
+            };
+            const telas = {
+                dashboard: document.getElementById('tela-dashboard').checked,
+                transacoes: document.getElementById('tela-transacoes').checked,
+                relatorios: document.getElementById('tela-relatorios').checked,
+                perfis: document.getElementById('tela-perfis').checked,
+                usuarios: document.getElementById('tela-usuarios').checked,
+                logs: document.getElementById('tela-logs').checked
+            };
+
+            if (editId) {
+                const idx = state.perfis.findIndex(p => p.id == editId);
+                if (idx !== -1) {
+                    state.perfis[idx] = { id: Number(editId), nome, desc, permissoes, telas };
+                    registrarLog('EDITAR PERFIL', `Perfil ${nome} atualizado.`);
+                }
+                cancelarEdicaoPerfil();
+            } else {
+                state.perfis.push({ id: Date.now(), nome, desc, permissoes, telas });
+                registrarLog('CRIAR PERFIL', `Novo perfil ${nome} criado.`);
+                document.getElementById('form-perfil').reset();
+            }
+            saveState();
+        }
+
+        function editarPerfil(id) {
+            const p = state.perfis.find(item => item.id == id);
+            if (!p) return;
+
+            document.getElementById('perfil-edit-id').value = p.id;
+            document.getElementById('perfil-nome').value = p.nome;
+            document.getElementById('perfil-desc').value = p.desc || '';
+            document.getElementById('perm-criar').checked = p.permissoes ? p.permissoes.criar : true;
+            document.getElementById('perm-editar').checked = p.permissoes ? p.permissoes.editar : true;
+            document.getElementById('perm-visualizar').checked = p.permissoes ? p.permissoes.visualizar : true;
+
+            const telas = p.telas || { dashboard: true, transacoes: true, relatorios: true, perfis: true, usuarios: true, logs: true };
+            document.getElementById('tela-dashboard').checked = !!telas.dashboard;
+            document.getElementById('tela-transacoes').checked = !!telas.transacoes;
+            document.getElementById('tela-relatorios').checked = !!telas.relatorios;
+            document.getElementById('tela-perfis').checked = !!telas.perfis;
+            document.getElementById('tela-usuarios').checked = !!telas.usuarios;
+            document.getElementById('tela-logs').checked = !!telas.logs;
+
+            document.getElementById('form-perfil-title').innerText = 'Editar Perfil e Permissões';
+            document.getElementById('btn-salvar-perfil').innerText = 'Atualizar Perfil';
+            document.getElementById('btn-cancel-perfil-edit').classList.remove('hidden');
+            document.getElementById('form-perfil').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelarEdicaoPerfil() {
+            document.getElementById('perfil-edit-id').value = '';
+            document.getElementById('form-perfil').reset();
+            document.getElementById('form-perfil-title').innerText = 'Cadastrar / Editar Perfil e Permissões';
+            document.getElementById('btn-salvar-perfil').innerText = 'Salvar Perfil';
+            document.getElementById('btn-cancel-perfil-edit').classList.add('hidden');
+        }
+
+        function deletePerfil(id) {
+            if (state.usuarios.some(u => u.perfilId == id)) { alert('Perfil associado a usuários ativos.'); return; }
+            state.perfis = state.perfis.filter(p => p.id !== id);
+            registrarLog('EXCLUIR PERFIL', `Perfil #${id} excluído.`);
+            saveState();
+        }
+
+        function saveUsuario(e) {
+            e.preventDefault();
+            const editId = document.getElementById('user-edit-id').value;
+            const nome = document.getElementById('user-nome').value.trim();
+            const email = document.getElementById('user-email').value.trim();
+            const login = document.getElementById('user-login').value.trim();
+            const senha = document.getElementById('user-senha').value;
+            const perfilId = document.getElementById('user-perfil').value;
+
+            if (editId) {
+                const idx = state.usuarios.findIndex(u => u.id == editId);
+                if (idx !== -1) {
+                    state.usuarios[idx].nome = nome;
+                    state.usuarios[idx].email = email;
+                    state.usuarios[idx].login = login;
+                    if (senha) state.usuarios[idx].senha = senha;
+                    state.usuarios[idx].perfilId = perfilId;
+                    registrarLog('EDITAR USUÁRIO', `Usuário ${login} atualizado.`);
+                }
+                cancelarEdicaoUsuario();
+            } else {
+                state.usuarios.push({ id: Date.now(), nome, email, login, senha, perfilId, theme: 'light' });
+                registrarLog('CRIAR USUÁRIO', `Novo usuário ${login} (${email}) cadastrado.`);
+                document.getElementById('form-usuario').reset();
+            }
+            saveState();
+        }
+
+        function editarUsuario(id) {
+            const u = state.usuarios.find(item => item.id == id);
+            if (!u) return;
+
+            document.getElementById('user-edit-id').value = u.id;
+            document.getElementById('user-nome').value = u.nome;
+            document.getElementById('user-email').value = u.email || '';
+            document.getElementById('user-login').value = u.login;
+            document.getElementById('user-senha').value = u.senha;
+            document.getElementById('user-perfil').value = u.perfilId;
+
+            document.getElementById('btn-salvar-user').innerText = 'Atualizar Usuário';
+            document.getElementById('btn-cancel-user-edit').classList.remove('hidden');
+            document.getElementById('form-usuario').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelarEdicaoUsuario() {
+            document.getElementById('user-edit-id').value = '';
+            document.getElementById('form-usuario').reset();
+            document.getElementById('btn-salvar-user').innerText = 'Salvar Usuário';
+            document.getElementById('btn-cancel-user-edit').classList.add('hidden');
+        }
+
+        function deleteUsuario(id) {
+            if (state.currentUser && state.currentUser.id === id) { alert('Não é permitido excluir o usuário conectado.'); return; }
+            state.usuarios = state.usuarios.filter(u => u.id !== id);
+            registrarLog('EXCLUIR USUÁRIO', `Usuário #${id} excluído.`);
+            saveState();
+        }
+
+        // --- VOZ NATURAL & RECONHECIMENTO PERSISTENTE (Item 1) ---
+        function falarResposta(texto) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const textoLimpo = texto.replace(/<\/?[^>]+(>|$)/g, "").replace(/&bull;/g, "").replace(/💡|📊|🤖|✔/g, "");
+                const utterance = new SpeechSynthesisUtterance(textoLimpo);
+                utterance.lang = 'pt-BR';
+                utterance.rate = 1.15;
+                utterance.pitch = 1.0;
+
+                const voices = window.speechSynthesis.getVoices();
+                const ptVoice = voices.find(v => v.lang.includes('pt-BR') || v.lang.includes('pt'));
+                if (ptVoice) utterance.voice = ptVoice;
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert('Seu navegador não suporta reconhecimento de voz. Por favor, digite sua pergunta.');
+                return;
+            }
+            if (!globalRecognition) {
+                globalRecognition = new SpeechRecognition();
+                globalRecognition.lang = 'pt-BR';
+                globalRecognition.interimResults = false;
+                globalRecognition.maxAlternatives = 1;
+
+                globalRecognition.onstart = function() {
+                    document.getElementById('mic-btn').classList.add('bg-red-600', 'animate-pulse');
+                };
+                globalRecognition.onresult = function(event) {
+                    const speechResult = event.results[0][0].transcript;
+                    document.getElementById('chat-input').value = speechResult;
+                    enviarMensagemIA();
+                };
+                globalRecognition.onerror = function(event) {
+                    console.error('Erro no reconhecimento de voz:', event.error);
+                };
+                globalRecognition.onend = function() {
+                    document.getElementById('mic-btn').classList.remove('bg-red-600', 'animate-pulse');
+                };
+            }
+            try {
+                globalRecognition.start();
+            } catch(e) {
+                console.log(e);
+            }
+        }
+
+        function handleChatKey(e) { if (e.key === 'Enter') enviarMensagemIA(); }
+
+        // Inteligência da IA verificando os lançamentos do sistema (Item 1)
+        function enviarMensagemIA() {
+            const input = document.getElementById('chat-input');
+            const pergunta = input.value.trim();
+            if (!pergunta) return;
+
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.innerHTML += `<p class="text-right"><strong>Você:</strong> ${pergunta}</p>`;
+            input.value = '';
+
+            const mesSel = document.getElementById('dash-filter-mes').value || state.mesAtivo;
+            const transMes = state.transacoes.filter(t => (t.mes || t.data.substring(0,7)) === mesSel);
+
+            let rec = 0, desp = 0;
+            transMes.forEach(t => { if (t.tipo === 'receita') rec += t.valor; else desp += t.valor; });
+            let saldo = rec - desp;
+
+            let resposta = "";
+            const p = pergunta.toLowerCase();
+
+            if (p.includes('saldo') || p.includes('quanto tenho') || p.includes('tenho') || p.includes('resumo')) {
+                resposta = `No mês ${mesSel}, suas receitas foram de R$ ${rec.toFixed(2)} e as despesas R$ ${desp.toFixed(2)}, resultando em um saldo de R$ ${saldo.toFixed(2)}.`;
+            } 
+            else if (p.includes('maior') || p.includes('mais caro') || p.includes('gastei mais')) {
+                let despesasMes = transMes.filter(t => t.tipo === 'despesa');
+                if (despesasMes.length > 0) {
+                    despesasMes.sort((a, b) => b.valor - a.valor);
+                    let maior = despesasMes[0];
+                    resposta = `No mês ${mesSel}, sua maior despesa foi "${maior.descricao}" no valor de R$ ${maior.valor.toFixed(2)}.`;
+                } else {
+                    resposta = `Não há despesas cadastradas no mês ${mesSel}.`;
+                }
+            } 
+            else if (p.includes('pagar') || p.includes('pendente') || p.includes('contas') || p.includes('em aberto')) {
+                let pendentes = transMes.filter(t => t.status === 'pendente');
+                let totalPendente = pendentes.reduce((acc, t) => acc + t.valor, 0);
+                resposta = `Você possui ${pendentes.length} conta(s) pendente(s) neste mês, totalizando R$ ${totalPendente.toFixed(2)}.`;
+            } 
+            else if (p.includes('receita') || p.includes('recebi') || p.includes('ganhei')) {
+                resposta = `O total de receitas no mês ${mesSel} é de R$ ${rec.toFixed(2)}.`;
+            } 
+            else if (p.includes('despesa') || p.includes('gasto') || p.includes('gastei')) {
+                resposta = `O total de despesas no mês ${mesSel} é de R$ ${desp.toFixed(2)}.`;
+            } 
+            else if (p.includes('economia') || p.includes('economizar') || p.includes('cortar') || p.includes('dica')) {
+                let meta15 = desp * 0.15;
+                resposta = `Suas despesas em ${mesSel} estão em R$ ${desp.toFixed(2)}. Cortando 15%, você economizará cerca de R$ ${meta15.toFixed(2)} para sua reserva.`;
+            } 
+            else {
+                let encontrados = transMes.filter(t => t.descricao.toLowerCase().split(' ').some(palavra => palavra.length > 2 && p.includes(palavra)));
+                if (encontrados.length > 0) {
+                    let descricoes = encontrados.map(e => `${e.descricao} (R$ ${e.valor.toFixed(2)})`).join(', ');
+                    resposta = `Encontrei o(s) seguinte(s) lançamento(s) em ${mesSel}: ${descricoes}.`;
+                } else {
+                    resposta = `Em ${mesSel}, seu saldo é de R$ ${saldo.toFixed(2)} (Receitas: R$ ${rec.toFixed(2)} | Despesas: R$ ${desp.toFixed(2)}). Como posso te ajudar com mais detalhes?`;
+                }
+            }
+
+            setTimeout(() => {
+                chatContainer.innerHTML += `<p><strong>🤖 IA:</strong> ${resposta}</p>`;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                falarResposta(resposta);
+            }, 300);
+        }
+
+        // --- DASHBOARD ---
+        function atualizarDashboardPorMes() {
+            const mesSel = document.getElementById('dash-filter-mes').value;
+            if (mesSel) { state.mesAtivo = mesSel; atualizarGraficos(); }
+        }
+
+        function atualizarGraficos() {
+            const mesSel = document.getElementById('dash-filter-mes').value || state.mesAtivo;
+            const transMes = state.transacoes.filter(t => (t.mes || t.data.substring(0,7)) === mesSel);
+
+            let rec = 0, desp = 0;
+            const catMap = {};
+            transMes.forEach(t => {
+                if (t.tipo === 'receita') rec += t.valor;
+                else {
+                    desp += t.valor;
+                    catMap[t.descricao] = (catMap[t.descricao] || 0) + t.valor;
+                }
+            });
+
+            const saldo = rec - desp;
+            document.getElementById('dash-receitas').innerText = `R$ ${rec.toFixed(2)}`;
+            document.getElementById('dash-despesas').innerText = `R$ ${desp.toFixed(2)}`;
+            const elSaldo = document.getElementById('dash-saldo');
+            elSaldo.innerText = `R$ ${saldo.toFixed(2)}`;
+            elSaldo.className = `text-2xl font-bold mt-1 ${saldo >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+
+            const ctxBal = document.getElementById('chartBalanco').getContext('2d');
+            if (chartBalancoInstance) chartBalancoInstance.destroy();
+            chartBalancoInstance = new Chart(ctxBal, {
+                type: 'bar',
+                data: { labels: ['Receitas', 'Despesas'], datasets: [{ data: [rec, desp], backgroundColor: ['#10b981', '#f43f5e'] }] },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            const sortedCat = Object.entries(catMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const ctxCat = document.getElementById('chartCategorias').getContext('2d');
+            if (chartCategoriasInstance) chartCategoriasInstance.destroy();
+            chartCategoriasInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: { labels: sortedCat.map(c => c[0]), datasets: [{ data: sortedCat.map(c => c[1]), backgroundColor: ['#6366f1', '#f59e0b', '#ec4899', '#3b82f6', '#10b981'] }] },
+                options: { responsive: true }
+            });
+        }
+
+        // --- EXPORTAÇÃO ---
+        function exportarExcel() {
+            const mesSel = document.getElementById('select-relatorio-mes').value;
+            const dados = state.transacoes.filter(t => (t.mes || t.data.substring(0,7)) === mesSel);
+            const wsData = [
+                ["Data", "Descrição", "Tipo", "Status", "Valor (R$)"],
+                ...dados.map(d => [d.data, d.descricao, d.tipo.toUpperCase(), d.status.toUpperCase(), d.valor])
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Lancamentos");
+            XLSX.writeFile(wb, `Controle_Financeiro_${mesSel}.xlsx`);
+        }
+
+        function exportarPDF() { window.print(); }
+
+        // --- RENDERIZAÇÃO GERAL ---
+        function render() {
+            const meses = getMesesDisponiveis();
+            const selectMes = document.getElementById('select-mes-ativo');
+            const selectRel = document.getElementById('select-relatorio-mes');
+            const dashFilter = document.getElementById('dash-filter-mes');
+            
+            [selectMes, selectRel, dashFilter].forEach(sel => {
+                if (!sel) return;
+                const valAnt = sel.value;
+                sel.innerHTML = '';
+                meses.forEach(m => {
+                    sel.innerHTML += `<option value="${m}" ${m === (valAnt || state.mesAtivo) ? 'selected' : ''}>${m}</option>`;
+                });
+            });
+
+            const perfilSelect = document.getElementById('user-perfil');
+            if (perfilSelect) {
+                perfilSelect.innerHTML = '<option value="">Selecione o Perfil...</option>';
+                state.perfis.forEach(p => {
+                    perfilSelect.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+                });
+            }
+
+            // Perfis
+            const tbodyPerfis = document.getElementById('tabela-perfis');
+            if (tbodyPerfis) {
+                tbodyPerfis.innerHTML = state.perfis.length ? '' : `<tr><td colspan="3" class="p-4 text-center">Nenhum perfil cadastrado.</td></tr>`;
+                state.perfis.forEach(p => {
+                    tbodyPerfis.innerHTML += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                            <td class="p-3 font-medium">${p.nome}</td>
+                            <td class="p-3 text-xs">Criar:${p.permissoes.criar?'Sim':'Não'} | Editar:${p.permissoes.editar?'Sim':'Não'} | Visualizar:${p.permissoes.visualizar?'Sim':'Não'}</td>
+                            <td class="p-3 text-right space-x-2">
+                                <button onclick="editarPerfil(${p.id})" class="text-indigo-500 hover:text-indigo-700" title="Editar Perfil"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="deletePerfil(${p.id})" class="text-rose-500 hover:text-rose-700" title="Excluir Perfil"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Usuários
+            const tbodyUsuarios = document.getElementById('tabela-usuarios');
+            if (tbodyUsuarios) {
+                tbodyUsuarios.innerHTML = state.usuarios.length ? '' : `<tr><td colspan="5" class="p-4 text-center">Nenhum usuário cadastrado.</td></tr>`;
+                state.usuarios.forEach(u => {
+                    const pObj = state.perfis.find(p => p.id == u.perfilId);
+                    tbodyUsuarios.innerHTML += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                            <td class="p-3 font-medium">${u.nome}</td>
+                            <td class="p-3">${u.login}</td>
+                            <td class="p-3 text-slate-500">${u.email || '-'}</td>
+                            <td class="p-3"><span class="bg-indigo-50 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded text-xs font-semibold">${pObj ? pObj.nome : 'N/A'}</span></td>
+                            <td class="p-3 text-right space-x-2">
+                                <button onclick="editarUsuario(${u.id})" class="text-indigo-500 hover:text-indigo-700" title="Editar Usuário"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="deleteUsuario(${u.id})" class="text-rose-500 hover:text-rose-700" title="Excluir Usuário"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Logs
+            const tbodyLogs = document.getElementById('tabela-logs');
+            if (tbodyLogs) {
+                tbodyLogs.innerHTML = state.logs.length ? '' : `<tr><td colspan="4" class="p-4 text-center text-slate-400">Nenhum log registrado até o momento.</td></tr>`;
+                state.logs.forEach(l => {
+                    tbodyLogs.innerHTML += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-mono">
+                            <td class="p-3 text-slate-500">${l.dataHora}</td>
+                            <td class="p-3 font-bold text-indigo-600 dark:text-indigo-400">${l.usuario}</td>
+                            <td class="p-3 uppercase font-semibold">${l.acao}</td>
+                            <td class="p-3 text-slate-600 dark:text-slate-300">${l.detalhes}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Transações
+            const transMes = state.transacoes.filter(t => (t.mes || t.data.substring(0,7)) === state.mesAtivo);
+            transMes.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            const tbodyTrans = document.getElementById('tabela-transacoes');
+            if (tbodyTrans) {
+                tbodyTrans.innerHTML = transMes.length ? '' : `<tr><td colspan="6" class="p-4 text-center text-slate-400">Nenhum lançamento encontrado para o mês ${state.mesAtivo}.</td></tr>`;
+                transMes.forEach(t => {
+                    const dataFmt = t.data ? t.data.split('-').reverse().join('/') : '-';
+                    const statusBadge = t.status === 'pago' 
+                        ? '<span class="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 px-2 py-0.5 rounded text-xs font-semibold">Pago</span>'
+                        : '<span class="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-2 py-0.5 rounded text-xs font-semibold">A Pagar</span>';
+
+                    const lockUser = state.locks['trans_' + t.id];
+                    const lockBadge = lockUser ? ` <span class="bg-rose-100 text-rose-700 text-[10px] px-1.5 py-0.5 rounded font-bold" title="Em edição por ${lockUser}"><i class="fa-solid fa-lock"></i> ${lockUser}</span>` : '';
+
+                    tbodyTrans.innerHTML += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                            <td class="p-3 text-slate-500 font-mono text-xs">${dataFmt}</td>
+                            <td class="p-3 font-medium">${t.descricao}${lockBadge}</td>
+                            <td class="p-3 ${t.tipo === 'receita' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'} font-semibold">
+                                ${t.tipo === 'receita' ? '+' : '-'} R$ ${t.valor.toFixed(2)}
+                            </td>
+                            <td class="p-3 uppercase text-xs font-bold text-slate-500">${t.tipo}</td>
+                            <td class="p-3">${statusBadge}</td>
+                            <td class="p-3 text-right space-x-2">
+                                <button onclick="editarTransacao(${t.id})" class="text-indigo-500 hover:text-indigo-700" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="deleteTransacao(${t.id})" class="text-rose-500 hover:text-rose-700" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Relatório Preview
+            const mesRel = selectRel ? selectRel.value : state.mesAtivo;
+            const transRel = state.transacoes.filter(t => (t.mes || t.data.substring(0,7)) === mesRel);
+            let rRec = 0, rDesp = 0;
+            const tbodyRel = document.getElementById('tabela-relatorio-preview');
+            if (tbodyRel) {
+                tbodyRel.innerHTML = transRel.length ? '' : `<tr><td colspan="5" class="p-4 text-center text-slate-400">Nenhum registro para o mês ${mesRel}.</td></tr>`;
+                transRel.forEach(t => {
+                    if (t.tipo === 'receita') rRec += t.valor;
+                    else rDesp += t.valor;
+                    tbodyRel.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-2 text-xs font-mono">${t.data}</td>
+                            <td class="p-2 font-medium">${t.descricao}</td>
+                            <td class="p-2 uppercase text-xs">${t.tipo}</td>
+                            <td class="p-2 uppercase text-xs">${t.status || 'pago'}</td>
+                            <td class="p-2 text-right ${t.tipo === 'receita' ? 'text-emerald-600' : 'text-rose-600'}">R$ ${t.valor.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('rel-titulo').innerText = `Relatório de Lançamentos - Mês ${mesRel}`;
+            document.getElementById('rel-data-emissao').innerText = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('rel-total-rec').innerText = `R$ ${rRec.toFixed(2)}`;
+            document.getElementById('rel-total-desp').innerText = `R$ ${rDesp.toFixed(2)}`;
+            const sPer = rRec - rDesp;
+            const elSP = document.getElementById('rel-saldo-per');
+            if (elSP) {
+                elSP.innerText = `R$ ${sPer.toFixed(2)}`;
+                elSP.className = `text-lg font-bold ${sPer >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+            }
+
+            atualizarGraficos();
+        }
+
+        window.onload = function() {
+            render();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+        }
+    </script>
+</body>
+</html>
